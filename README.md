@@ -19,8 +19,6 @@ npm run dev
 
 Open the printed local URL on your phone (same network) or in a mobile-width browser window.
 
-To unlock the app locally, copy `.env.example` to `.env.local` and set your own `VITE_APP_PASSWORD`.
-
 ### Build
 
 ```bash
@@ -32,13 +30,8 @@ npm run build
 The `.github/workflows/deploy-pages.yml` workflow builds and deploys on every push to `main`. One-time setup:
 
 1. In repo **Settings → Pages**, set "Build and deployment" source to **GitHub Actions**.
-2. In repo **Settings → Secrets and variables → Actions**, add a secret named `APP_PASSWORD` with the team password.
-3. Push to `main` (or run the workflow manually from the Actions tab).
+2. Push to `main` (or run the workflow manually from the Actions tab).
 
-The site will be published at `https://bojankocijan.github.io/basketball/`.
+The site will be published at `https://bojankocijan.github.io/basketball/`, publicly accessible to anyone with the link.
 
-### About the password
-
-The password screen is a **casual deterrent, not real security**. GitHub Pages only serves static files — there's no server to check the password against, so it gets baked into the JavaScript bundle and is visible to anyone who opens their browser's dev tools. It's enough to keep the link from being casually stumbled on, but not to protect anything sensitive.
-
-Real access control needs a backend: a database to store exercise ratings/history centrally (instead of per-device `localStorage`, as it does now) and proper authentication (e.g. via Supabase, which handles both). That's a planned next step, not yet built.
+Exercise ratings and history are stored per-device in `localStorage` for now. A backend (e.g. Supabase) would let that data — and any future login — be shared across devices; that's a planned next step, not yet built.
