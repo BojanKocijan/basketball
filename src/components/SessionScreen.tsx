@@ -102,6 +102,7 @@ export function SessionScreen({
       <ExerciseTimeline
         exercises={planExercises}
         currentId={current.id}
+        doneIds={new Set(timeline.filter((t) => t.endSec <= elapsedSeconds).map((t) => t.exercise.id))}
         onSelect={(e) => {
           const idx = timeline.findIndex((t) => t.exercise.id === e.id)
           if (idx !== -1) goToIndex(idx)
