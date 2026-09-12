@@ -1,7 +1,8 @@
-export type Tab = 'setup' | 'session' | 'vocabulary'
+export type Tab = 'setup' | 'exercises' | 'session' | 'vocabulary'
 
 const TABS: { id: Tab; label: string; emoji: string }[] = [
   { id: 'setup', label: 'Setup', emoji: '📋' },
+  { id: 'exercises', label: 'Exercises', emoji: '🏀' },
   { id: 'session', label: 'Session', emoji: '⏱️' },
   { id: 'vocabulary', label: 'Words', emoji: '💬' },
 ]
@@ -26,7 +27,7 @@ export function BottomNav({
               key={tab.id}
               type="button"
               onClick={() => onChange(tab.id)}
-              className={`flex flex-1 flex-col items-center gap-0.5 py-2.5 text-xs font-medium transition-colors ${
+              className={`flex flex-1 flex-col items-center gap-0.5 py-2.5 text-[11px] font-medium transition-colors ${
                 isActive
                   ? 'text-orange-600 dark:text-orange-400'
                   : 'text-neutral-500 dark:text-neutral-400'

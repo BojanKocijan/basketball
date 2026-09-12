@@ -1,30 +1,33 @@
+import type { CategoryId } from './categories'
+
 export interface Cue {
   nl: string
   en: string
 }
 
-export interface Segment {
+export interface Exercise {
   id: string
-  start: number // minutes from session start
-  end: number
   emoji: string
   title: string
   subtitle?: string
+  /** What this exercise trains — used to build a focused training around a theme. */
+  categories: CategoryId[]
+  /** Suggested duration in minutes when run at its default pace. */
+  durationMinutes: number
   goal: string
   steps: string[]
   cues?: Cue[]
-  tip?: string
+  /** A break isn't a "graded" exercise — hidden from rating/library filtering by default. */
+  isBreak?: boolean
 }
 
-export const totalMinutes = 60
-
-export const segments: Segment[] = [
+export const exercises: Exercise[] = [
   {
     id: 'welcome',
-    start: 0,
-    end: 5,
     emoji: '👋',
     title: 'Welcome circle',
+    categories: ['warmup'],
+    durationMinutes: 5,
     goal: 'Learn names, set the tone, agree on rules.',
     steps: [
       'Children place one foot on a ball, or hold it still.',
@@ -42,10 +45,10 @@ export const segments: Segment[] = [
   },
   {
     id: 'wall-of-china',
-    start: 5,
-    end: 10,
     emoji: '🧱',
     title: 'Wall of china',
+    categories: ['warmup', 'agility'],
+    durationMinutes: 5,
     goal: 'Warm up, run around, have fun as a group.',
     steps: [
       'Pick one child to be the "tagger" who tries to tag other players.',
@@ -57,11 +60,11 @@ export const segments: Segment[] = [
   },
   {
     id: 'mario-jump-crab-cheetah',
-    start: 10,
-    end: 15,
     emoji: '🦘',
     title: 'Mario, Jump, Crab, Cheetah',
     subtitle: 'Corner-to-corner movement circuit',
+    categories: ['agility', 'warmup'],
+    durationMinutes: 5,
     goal: 'Coordination, fun movement patterns, listening for the whistle.',
     steps: [
       'Start at corner 1.',
@@ -75,10 +78,10 @@ export const segments: Segment[] = [
   },
   {
     id: 'everybody-dribbles',
-    start: 15,
-    end: 20,
     emoji: '⛹️',
     title: 'Everybody dribbles',
+    categories: ['dribbling', 'agility'],
+    durationMinutes: 5,
     goal: 'Ball familiarity and dribbling control.',
     steps: [
       'Give every child a ball and define a safe playing area.',
@@ -97,20 +100,21 @@ export const segments: Segment[] = [
   },
   {
     id: 'break',
-    start: 20,
-    end: 22,
     emoji: '🥤',
     title: 'Water break',
+    categories: [],
+    durationMinutes: 2,
     goal: 'Drink, breathe, reset.',
     steps: ['Send children to the drinking area.', 'Keep it short and calm before regrouping.'],
     cues: [{ nl: 'Drinkpauze', en: 'Water break' }],
+    isBreak: true,
   },
   {
     id: 'treasure-dribbling',
-    start: 22,
-    end: 30,
     emoji: '💎',
     title: 'Treasure dribbling',
+    categories: ['dribbling', 'teamplay'],
+    durationMinutes: 8,
     goal: 'Dribbling under light pressure, teamwork, weaker-hand practice.',
     steps: [
       'Put cones or bibs ("the treasure") in the centre. Split children between two home bases.',
@@ -123,10 +127,10 @@ export const segments: Segment[] = [
   },
   {
     id: 'passing-partners',
-    start: 30,
-    end: 40,
     emoji: '🤝',
     title: 'Passing partners',
+    categories: ['passing'],
+    durationMinutes: 10,
     goal: 'Chest passing technique and cooperation.',
     steps: [
       'Pair children carefully — ideally a confident child with a newer child. Stand about two large steps apart.',
@@ -146,10 +150,10 @@ export const segments: Segment[] = [
   },
   {
     id: 'shooting-stations',
-    start: 40,
-    end: 50,
     emoji: '🏀',
     title: 'Shooting stations',
+    categories: ['shooting'],
+    durationMinutes: 10,
     goal: 'Everyone shoots, everyone scores, everyone is celebrated.',
     steps: [
       'Split into two groups of four or five. One coach leads each basket.',
@@ -160,16 +164,14 @@ export const segments: Segment[] = [
       'Everyone tries to score one basket — celebrate each child’s first basket enthusiastically.',
       'Avoid demanding adult shooting form — success and confidence matter more at this age.',
     ],
-    cues: [
-      { nl: 'Buig, kijk, duw', en: 'Bend, look, push' },
-    ],
+    cues: [{ nl: 'Buig, kijk, duw', en: 'Bend, look, push' }],
   },
   {
     id: 'mini-game',
-    start: 50,
-    end: 57,
     emoji: '🎯',
     title: 'Mini-game: End-zone basketball',
+    categories: ['teamplay', 'defense', 'passing', 'shooting'],
+    durationMinutes: 7,
     goal: 'Team play, everyone touches the ball.',
     steps: [
       'Play 4-v-4 or 5-v-5 across a small area, using two cone end zones instead of baskets.',
@@ -188,10 +190,10 @@ export const segments: Segment[] = [
   },
   {
     id: 'team-finish',
-    start: 57,
-    end: 60,
     emoji: '🎉',
     title: 'Team finish',
+    categories: ['teamplay', 'warmup'],
+    durationMinutes: 3,
     goal: 'Reflect together and celebrate as a team.',
     steps: [
       'Gather in a circle, balls still on the floor.',
@@ -203,53 +205,6 @@ export const segments: Segment[] = [
   },
 ]
 
-export const setupChecklist = [
-  'One ball per child, if possible',
-  'Two baskets at the lowest available height',
-  'About 12 cones',
-  'Two different-coloured sets of bibs',
-  'A clear drinking area',
-  'A small "home base" marked with cones where children gather',
-]
-
-export const coachRoles = [
-  {
-    role: 'Coach 1',
-    description: 'Welcomes families, gives very short bilingual instructions.',
-  },
-  {
-    role: 'Coach 2',
-    description: 'Demonstrates every activity and runs one station.',
-  },
-]
-
-export const coachingPrinciples = [
-  'Demonstrate every activity physically',
-  'Give no more than one or two instructions at once',
-  'Use names as often as possible',
-  'Keep queues to three children or fewer',
-  'Never eliminate a child from a game',
-  'Give beginners permission to simplify the task',
-  'Give experienced children an extra challenge quietly',
-  'Stop an activity while it is still fun',
-  'Praise courage, kindness and effort — not only baskets',
-  'Demonstrate first; speak second',
-  'Use the same hand signals and key words in both languages',
-]
-
-export const vocabulary: Cue[] = [
-  { nl: 'Luister en kijk', en: 'Listen and look' },
-  { nl: 'Stop / bevries', en: 'Stop / freeze' },
-  { nl: 'Bal stil', en: 'Ball still' },
-  { nl: 'Dribbelen', en: 'Dribble' },
-  { nl: 'Passen', en: 'Pass' },
-  { nl: 'Schieten', en: 'Shoot' },
-  { nl: 'Wisselen', en: 'Switch' },
-  { nl: 'Andere hand', en: 'Other hand' },
-  { nl: 'Zoek een maatje', en: 'Find a partner' },
-  { nl: 'Kom bij elkaar', en: 'Come together' },
-  { nl: 'Goed geprobeerd', en: 'Good try' },
-  { nl: 'Goed samengespeeld', en: 'Nice teamwork' },
-  { nl: 'Nog één keer', en: 'One more time' },
-  { nl: 'Drinkpauze', en: 'Water break' },
-]
+export function findExercise(id: string): Exercise | undefined {
+  return exercises.find((e) => e.id === id)
+}

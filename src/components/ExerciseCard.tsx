@@ -1,25 +1,35 @@
-import type { Segment } from '../data/session'
+import type { Exercise } from '../data/exercises'
+import { CategoryBadges } from './CategoryBadges'
+import { RatingWidget } from './RatingWidget'
 
-export function SegmentCard({
-  segment,
+export function ExerciseCard({
+  exercise,
   remainingLabel,
+  timeRangeLabel,
+  onRate,
+  ratingAverage,
+  ratingCount,
 }: {
-  segment: Segment
+  exercise: Exercise
   remainingLabel: string
+  timeRangeLabel: string
+  onRate: (value: number) => void
+  ratingAverage: number | null
+  ratingCount: number
 }) {
   return (
     <div className="rounded-3xl border border-black/10 bg-white p-5 shadow-sm dark:border-white/10 dark:bg-neutral-900">
       <div className="flex items-start justify-between gap-3">
         <div>
           <div className="text-xs font-semibold uppercase tracking-wide text-orange-600 dark:text-orange-400">
-            {segment.start}:00 – {segment.end}:00
+            {timeRangeLabel}
           </div>
           <h2 className="mt-1 flex items-center gap-2 text-xl font-bold text-neutral-900 dark:text-neutral-50">
-            <span>{segment.emoji}</span>
-            {segment.title}
+            <span>{exercise.emoji}</span>
+            {exercise.title}
           </h2>
-          {segment.subtitle && (
-            <p className="text-sm text-neutral-500 dark:text-neutral-400">{segment.subtitle}</p>
+          {exercise.subtitle && (
+            <p className="text-sm text-neutral-500 dark:text-neutral-400">{exercise.subtitle}</p>
           )}
         </div>
         <div className="shrink-0 rounded-2xl bg-neutral-900 px-3 py-2 text-center text-white dark:bg-white dark:text-neutral-900">
@@ -28,19 +38,25 @@ export function SegmentCard({
         </div>
       </div>
 
+      {!exercise.isBreak && (
+        <div className="mt-3">
+          <CategoryBadges categories={exercise.categories} />
+        </div>
+      )}
+
       <p className="mt-3 rounded-xl bg-orange-50 px-3 py-2 text-sm font-medium text-orange-800 dark:bg-orange-500/10 dark:text-orange-300">
-        🎯 {segment.goal}
+        🎯 {exercise.goal}
       </p>
 
       <ol className="mt-3 list-decimal space-y-1.5 pl-5 text-sm text-neutral-700 dark:text-neutral-300">
-        {segment.steps.map((step, i) => (
+        {exercise.steps.map((step, i) => (
           <li key={i}>{step}</li>
         ))}
       </ol>
 
-      {segment.cues && segment.cues.length > 0 && (
+      {exercise.cues && exercise.cues.length > 0 && (
         <div className="mt-4 flex flex-wrap gap-2">
-          {segment.cues.map((cue) => (
+          {exercise.cues.map((cue) => (
             <span
               key={cue.nl}
               className="rounded-full border border-black/10 bg-neutral-50 px-3 py-1 text-xs text-neutral-700 dark:border-white/10 dark:bg-neutral-800 dark:text-neutral-300"
@@ -50,6 +66,12 @@ export function SegmentCard({
               {cue.en}
             </span>
           ))}
+        </div>
+      )}
+
+      {!exercise.isBreak && (
+        <div className="mt-4">
+          <RatingWidget onRate={onRate} average={ratingAverage} count={ratingCount} />
         </div>
       )}
     </div>

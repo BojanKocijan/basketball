@@ -1,0 +1,20 @@
+import { categoryInfo, type CategoryId } from '../data/categories'
+
+export function CategoryBadges({ categories }: { categories: CategoryId[] }) {
+  if (categories.length === 0) return null
+  return (
+    <div className="flex flex-wrap gap-1.5">
+      {categories.map((id) => {
+        const info = categoryInfo(id)
+        return (
+          <span
+            key={id}
+            className="rounded-full bg-neutral-900/5 px-2.5 py-1 text-[11px] font-semibold text-neutral-600 dark:bg-white/10 dark:text-neutral-300"
+          >
+            {info.emoji} {info.label}
+          </span>
+        )
+      })}
+    </div>
+  )
+}

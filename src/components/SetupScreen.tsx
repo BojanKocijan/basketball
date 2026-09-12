@@ -1,4 +1,4 @@
-import { coachRoles, coachingPrinciples, setupChecklist } from '../data/session'
+import { coachRoles, coachingPrinciples, setupChecklist } from '../data/coaching'
 import { useChecklist } from '../hooks/useChecklist'
 
 export function SetupScreen() {

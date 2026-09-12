@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react'
-import { vocabulary } from '../data/session'
+import { vocabulary } from '../data/coaching'
 
 export function VocabularyScreen() {
   const [query, setQuery] = useState('')

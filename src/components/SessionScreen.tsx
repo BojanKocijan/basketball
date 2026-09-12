@@ -1,46 +1,93 @@
 import { useMemo } from 'react'
-import { segments, totalMinutes } from '../data/session'
+import type { useActivePlan } from '../hooks/useActivePlan'
+import { useRatings } from '../hooks/useRatings'
 import { useSessionClock } from '../hooks/useSessionClock'
 import { formatClock } from '../utils/format'
-import { SegmentCard } from './SegmentCard'
-import { SegmentTimeline } from './SegmentTimeline'
+import { ExerciseCard } from './ExerciseCard'
+import { ExerciseTimeline } from './ExerciseTimeline'
 
-export function SessionScreen() {
+export function SessionScreen({
+  activePlan,
+  onBuildPlan,
+}: {
+  activePlan: ReturnType<typeof useActivePlan>
+  onBuildPlan: () => void
+}) {
+  const { planTitle, planEmoji, planExercises, totalMinutes } = activePlan
   const { elapsedSeconds, running, start, pause, reset, jumpTo } = useSessionClock()
-  const elapsedMinutes = elapsedSeconds / 60
+  const { rate, stats } = useRatings()
   const totalSeconds = totalMinutes * 60
 
-  const currentIndex = useMemo(() => {
-    const idx = segments.findIndex((s) => elapsedMinutes < s.end)
-    return idx === -1 ? segments.length - 1 : idx
-  }, [elapsedMinutes])
+  // cumulative start/end (in seconds) for each exercise, derived from the active plan's order
+  const timeline = useMemo(() => {
+    return planExercises.reduce<{ exercise: (typeof planExercises)[number]; startSec: number; endSec: number }[]>(
+      (acc, exercise) => {
+        const startSec = acc.length > 0 ? acc[acc.length - 1].endSec : 0
+        acc.push({ exercise, startSec, endSec: startSec + exercise.durationMinutes * 60 })
+        return acc
+      },
+      [],
+    )
+  }, [planExercises])
 
-  const current = segments[currentIndex]
-  const next = segments[currentIndex + 1]
-  const remainingInSegment = Math.max(0, current.end * 60 - elapsedSeconds)
+  const currentIndex = useMemo(() => {
+    const idx = timeline.findIndex((t) => elapsedSeconds < t.endSec)
+    return idx === -1 ? timeline.length - 1 : idx
+  }, [timeline, elapsedSeconds])
+
+  const currentEntry = timeline[currentIndex]
+  const nextEntry = timeline[currentIndex + 1]
   const isSessionDone = elapsedSeconds >= totalSeconds
 
-  const overallPct = Math.min(100, (elapsedSeconds / totalSeconds) * 100)
-  const segmentDuration = (current.end - current.start) * 60
+  const overallPct = totalSeconds > 0 ? Math.min(100, (elapsedSeconds / totalSeconds) * 100) : 0
+
+  function goToIndex(index: number) {
+    const target = timeline[Math.max(0, Math.min(timeline.length - 1, index))]
+    jumpTo(target.startSec)
+  }
+
+  if (!currentEntry) {
+    return (
+      <div className="mx-auto max-w-md space-y-4 px-4 pb-24 pt-[calc(env(safe-area-inset-top)+1rem)]">
+        <p className="text-center text-sm text-neutral-500">No exercises in this training yet.</p>
+        <button
+          type="button"
+          onClick={onBuildPlan}
+          className="w-full rounded-2xl bg-orange-500 py-3 text-sm font-bold text-white"
+        >
+          Build a training
+        </button>
+      </div>
+    )
+  }
+
+  const { exercise: current } = currentEntry
+  const remainingInSegment = Math.max(0, currentEntry.endSec - elapsedSeconds)
+  const segmentDuration = currentEntry.endSec - currentEntry.startSec
   const segmentElapsed = Math.min(
     segmentDuration,
-    Math.max(0, elapsedSeconds - current.start * 60),
+    Math.max(0, elapsedSeconds - currentEntry.startSec),
   )
   const segmentPct = segmentDuration > 0 ? (segmentElapsed / segmentDuration) * 100 : 0
+  const currentStats = stats(current.id)
 
-  function goToSegment(index: number) {
-    const target = segments[Math.max(0, Math.min(segments.length - 1, index))]
-    jumpTo(target.start * 60)
+  function timeRangeLabel(startSec: number, endSec: number) {
+    const fmt = (s: number) => `${Math.floor(s / 60)}:00`
+    return `${fmt(startSec)} – ${fmt(endSec)}`
   }
 
   return (
     <div className="mx-auto max-w-md pb-24">
       <header className="sticky top-0 z-10 border-b border-black/10 bg-white/90 px-4 pb-3 pt-[calc(env(safe-area-inset-top)+0.75rem)] backdrop-blur dark:border-white/10 dark:bg-neutral-950/90">
-        <div className="flex items-center justify-between">
-          <h1 className="text-base font-bold text-neutral-900 dark:text-neutral-50">
-            U8 Basketball Training
-          </h1>
-          <span className="font-mono text-sm text-neutral-500 dark:text-neutral-400">
+        <div className="flex items-center justify-between gap-2">
+          <button
+            type="button"
+            onClick={onBuildPlan}
+            className="truncate text-left text-base font-bold text-neutral-900 dark:text-neutral-50"
+          >
+            {planEmoji} {planTitle} <span className="text-neutral-400">✎</span>
+          </button>
+          <span className="shrink-0 font-mono text-sm text-neutral-500 dark:text-neutral-400">
             {formatClock(elapsedSeconds)} / {totalMinutes}:00
           </span>
         </div>
@@ -52,7 +99,14 @@ export function SessionScreen() {
         </div>
       </header>
 
-      <SegmentTimeline segments={segments} currentId={current.id} onSelect={(s) => jumpTo(s.start * 60)} />
+      <ExerciseTimeline
+        exercises={planExercises}
+        currentId={current.id}
+        onSelect={(e) => {
+          const idx = timeline.findIndex((t) => t.exercise.id === e.id)
+          if (idx !== -1) goToIndex(idx)
+        }}
+      />
 
       <main className="space-y-4 px-4 pt-2">
         {isSessionDone ? (
@@ -73,10 +127,20 @@ export function SessionScreen() {
                 style={{ width: `${segmentPct}%` }}
               />
             </div>
-            <SegmentCard segment={current} remainingLabel={formatClock(remainingInSegment)} />
-            {next && (
+            <ExerciseCard
+              exercise={current}
+              remainingLabel={formatClock(remainingInSegment)}
+              timeRangeLabel={timeRangeLabel(currentEntry.startSec, currentEntry.endSec)}
+              onRate={(value) => rate(current.id, value)}
+              ratingAverage={currentStats.average}
+              ratingCount={currentStats.count}
+            />
+            {nextEntry && (
               <div className="rounded-2xl border border-dashed border-black/15 px-4 py-3 text-sm text-neutral-500 dark:border-white/15 dark:text-neutral-400">
-                Up next: <span className="font-semibold">{next.emoji} {next.title}</span> at {next.start}:00
+                Up next:{' '}
+                <span className="font-semibold">
+                  {nextEntry.exercise.emoji} {nextEntry.exercise.title}
+                </span>
               </div>
             )}
           </>
@@ -85,7 +149,7 @@ export function SessionScreen() {
         <div className="grid grid-cols-4 gap-2 pt-1">
           <button
             type="button"
-            onClick={() => goToSegment(currentIndex - 1)}
+            onClick={() => goToIndex(currentIndex - 1)}
             disabled={currentIndex === 0}
             className="rounded-2xl border border-black/10 py-3 text-sm font-semibold text-neutral-700 disabled:opacity-30 dark:border-white/10 dark:text-neutral-200"
           >
@@ -100,8 +164,8 @@ export function SessionScreen() {
           </button>
           <button
             type="button"
-            onClick={() => goToSegment(currentIndex + 1)}
-            disabled={currentIndex === segments.length - 1}
+            onClick={() => goToIndex(currentIndex + 1)}
+            disabled={currentIndex === timeline.length - 1}
             className="rounded-2xl border border-black/10 py-3 text-sm font-semibold text-neutral-700 disabled:opacity-30 dark:border-white/10 dark:text-neutral-200"
           >
             Next ⏭
