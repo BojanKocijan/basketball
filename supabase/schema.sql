@@ -45,7 +45,9 @@ create table if not exists plans (
   updated_at timestamptz not null default now()
 );
 
-create index if not exists plans_group_date_idx on plans (group_id, training_date);
+-- One training per date per group — enforced here too so two trainers racing to plan
+-- the same date can't both succeed, not just caught client-side.
+create unique index if not exists plans_group_date_unique_idx on plans (group_id, training_date);
 
 create table if not exists app_config (
   key text primary key,
@@ -104,6 +106,9 @@ begin
   values (p_group_id, p_training_date, p_title, p_emoji, p_exercise_ids)
   returning * into result;
   return result;
+exception
+  when unique_violation then
+    raise exception 'This group already has a training planned on that date';
 end;
 $$;
 
@@ -135,6 +140,9 @@ begin
   where id = p_id
   returning * into result;
   return result;
+exception
+  when unique_violation then
+    raise exception 'This group already has a training planned on that date';
 end;
 $$;
 

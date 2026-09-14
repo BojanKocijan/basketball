@@ -10,7 +10,7 @@ import { PlanTrainingWizard } from './PlanTrainingWizard'
 export function GroupsScreen() {
   const { groupId, setGroupId, group } = useActiveGroup()
   const { unlocked, checking, error: authError, tryUnlock, lock, passcode } = useTrainerAccess()
-  const { upcoming, past, loading, error, createPlan, updatePlan, deletePlan } = usePlans(groupId)
+  const { plans, upcoming, past, loading, error, createPlan, updatePlan, deletePlan } = usePlans(groupId)
 
   const [codeInput, setCodeInput] = useState('')
   const [rememberCode, setRememberCode] = useState(true)
@@ -234,21 +234,18 @@ export function GroupsScreen() {
       </section>
 
       {formOpen && (
-        <div className="fixed inset-0 z-20 flex items-end justify-center bg-black/40 px-4 pb-20 sm:items-center sm:pb-4">
-          <div className="max-h-[85vh] w-full max-w-md overflow-y-auto">
-            <PlanTrainingWizard
-              key={editingPlan?.id ?? 'new'}
-              mode={editingPlan ? 'edit' : 'create'}
-              initialDate={editingPlan?.training_date ?? ''}
-              initialExerciseIds={editingPlan?.exercise_ids ?? []}
-              groupLabel={group.label}
-              saving={saving}
-              saveError={saveError}
-              onCancel={closeForm}
-              onSave={savePlan}
-            />
-          </div>
-        </div>
+        <PlanTrainingWizard
+          key={editingPlan?.id ?? 'new'}
+          mode={editingPlan ? 'edit' : 'create'}
+          initialDate={editingPlan?.training_date ?? ''}
+          initialExerciseIds={editingPlan?.exercise_ids ?? []}
+          groupLabel={group.label}
+          takenDates={plans.filter((p) => p.id !== editingPlan?.id).map((p) => p.training_date)}
+          saving={saving}
+          saveError={saveError}
+          onCancel={closeForm}
+          onSave={savePlan}
+        />
       )}
 
       {past.length > 0 && (

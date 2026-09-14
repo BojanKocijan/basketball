@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { CATEGORIES, type CategoryId } from '../data/categories'
 import { exercises, findExercise } from '../data/exercises'
 import { formatDate } from '../utils/format'
+import { Calendar } from './Calendar'
 import { SelectableExerciseCard } from './SelectableExerciseCard'
 
 const STEPS = ['When?', 'Focus', 'Exercises', 'Review'] as const
@@ -11,6 +12,7 @@ export function PlanTrainingWizard({
   initialDate,
   initialExerciseIds,
   groupLabel,
+  takenDates,
   saving,
   saveError,
   onCancel,
@@ -20,6 +22,8 @@ export function PlanTrainingWizard({
   initialDate: string
   initialExerciseIds: string[]
   groupLabel: string
+  /** Dates (YYYY-MM-DD) this group already has a training on — one training per date, per group. */
+  takenDates: string[]
   saving: boolean
   saveError: string | null
   onCancel: () => void
@@ -27,6 +31,7 @@ export function PlanTrainingWizard({
 }) {
   const [step, setStep] = useState(1)
   const [date, setDate] = useState(initialDate)
+  const takenDateSet = new Set(takenDates)
   const [activeCategories, setActiveCategories] = useState<CategoryId[]>([])
   const [selected, setSelected] = useState<Set<string>>(new Set(initialExerciseIds))
 
@@ -51,12 +56,17 @@ export function PlanTrainingWizard({
     setActiveCategories((prev) => (prev.includes(id) ? prev.filter((c) => c !== id) : [...prev, id]))
   }
 
-  const canGoNext = step === 1 ? Boolean(date) : step === 3 ? selected.size > 0 : true
+  const canGoNext =
+    step === 1
+      ? Boolean(date) && !takenDateSet.has(date)
+      : step === 3
+        ? selected.size > 0
+        : true
 
   return (
-    <section className="space-y-4 rounded-3xl border border-black/10 bg-white p-4 dark:border-white/10 dark:bg-neutral-900">
-      <div>
-        <h2 className="text-sm font-bold text-neutral-900 dark:text-neutral-50">
+    <div className="fixed inset-0 z-30 flex flex-col bg-neutral-50 dark:bg-neutral-950">
+      <header className="shrink-0 border-b border-black/10 bg-white px-4 pb-3 pt-[calc(env(safe-area-inset-top)+0.75rem)] dark:border-white/10 dark:bg-neutral-900">
+        <h2 className="text-base font-bold text-neutral-900 dark:text-neutral-50">
           {mode === 'edit' ? 'Edit training' : 'Plan a training'}
         </h2>
         <div className="mt-2 flex items-center gap-1.5">
@@ -75,124 +85,137 @@ export function PlanTrainingWizard({
         <p className="mt-1.5 text-xs font-semibold uppercase tracking-wide text-neutral-400">
           Step {step} of {STEPS.length} · {STEPS[step - 1]}
         </p>
-      </div>
+      </header>
 
-      {step === 1 && (
-        <div>
-          <label className="text-xs font-semibold uppercase tracking-wide text-neutral-400">
-            Training date
-          </label>
-          <input
-            type="date"
-            value={date}
-            min={new Date().toISOString().slice(0, 10)}
-            onChange={(e) => setDate(e.target.value)}
-            autoFocus
-            className="mt-1 w-full rounded-xl border border-black/10 px-3 py-2 text-sm dark:border-white/10 dark:bg-neutral-800"
-          />
-        </div>
-      )}
-
-      {step === 2 && (
-        <div>
-          <p className="mb-2 text-sm text-neutral-500 dark:text-neutral-400">
-            Optionally narrow the exercise list to a focus for this training.
-          </p>
-          <div className="flex flex-wrap gap-2">
-            {CATEGORIES.map((cat) => {
-              const active = activeCategories.includes(cat.id)
-              return (
-                <button
-                  key={cat.id}
-                  type="button"
-                  onClick={() => toggleCategory(cat.id)}
-                  className={`rounded-full border px-3 py-1.5 text-xs font-medium transition-colors ${
-                    active
-                      ? 'border-orange-500 bg-orange-50 text-orange-700 dark:bg-orange-500/10 dark:text-orange-300'
-                      : 'border-black/10 bg-white text-neutral-600 dark:border-white/10 dark:bg-neutral-900 dark:text-neutral-300'
-                  }`}
-                >
-                  {cat.emoji} {cat.label}
-                </button>
-              )
-            })}
-          </div>
-        </div>
-      )}
-
-      {step === 3 && (
-        <div>
-          <div className="max-h-96 space-y-2 overflow-y-auto">
-            {filtered.map((ex) => (
-              <SelectableExerciseCard
-                key={ex.id}
-                exercise={ex}
-                selected={selected.has(ex.id)}
-                onToggle={() => toggleSelect(ex.id)}
+      <main className="mx-auto w-full max-w-md flex-1 space-y-4 overflow-y-auto px-4 py-4">
+        {step === 1 && (
+          <div>
+            <label className="text-xs font-semibold uppercase tracking-wide text-neutral-400">
+              Training date
+            </label>
+            <div className="mt-1">
+              <Calendar
+                value={date}
+                onChange={setDate}
+                markedDates={takenDateSet}
+                disabledDates={takenDateSet}
               />
-            ))}
-          </div>
-          <p className="mt-2 text-xs text-neutral-500 dark:text-neutral-400">
-            {selected.size} selected · {selectedMinutes}′
-          </p>
-        </div>
-      )}
-
-      {step === 4 && (
-        <div className="space-y-3">
-          <div className="rounded-2xl border border-black/10 bg-neutral-50 px-4 py-3 dark:border-white/10 dark:bg-neutral-800/60">
-            <p className="text-sm font-bold text-neutral-900 dark:text-neutral-50">
-              {groupLabel} · {formatDate(date)}
-            </p>
-            <p className="text-xs text-neutral-500 dark:text-neutral-400">
-              {selected.size} exercises · {selectedMinutes}′ total
+            </div>
+            {date && takenDateSet.has(date) && (
+              <p className="mt-2 text-xs font-semibold text-red-600">
+                {groupLabel} already has a training on this date — pick another day.
+              </p>
+            )}
+            <p className="mt-2 flex items-center gap-1.5 text-xs text-neutral-400">
+              <span className="h-1.5 w-1.5 rounded-full bg-orange-500" /> already has a training
+              planned
             </p>
           </div>
-          <ul className="space-y-1.5">
-            {selectedExercises.map((ex) => (
-              <li
-                key={ex.id}
-                className="flex items-center justify-between rounded-xl border border-black/10 px-3 py-2 text-sm dark:border-white/10"
-              >
-                <span>
-                  {ex.emoji} {ex.title}
-                </span>
-                <span className="text-xs text-neutral-400">{ex.durationMinutes}′</span>
-              </li>
-            ))}
-          </ul>
-          {saveError && <p className="text-xs font-semibold text-red-600">{saveError}</p>}
-        </div>
-      )}
-
-      <div className="flex gap-2">
-        <button
-          type="button"
-          onClick={step === 1 ? onCancel : () => setStep((s) => s - 1)}
-          className="flex-1 rounded-xl border border-black/10 py-2.5 text-sm font-semibold text-neutral-600 dark:border-white/10 dark:text-neutral-300"
-        >
-          {step === 1 ? 'Cancel' : 'Back'}
-        </button>
-        {step < STEPS.length ? (
-          <button
-            type="button"
-            disabled={!canGoNext}
-            onClick={() => setStep((s) => s + 1)}
-            className="flex-1 rounded-xl bg-orange-500 py-2.5 text-sm font-bold text-white disabled:opacity-50"
-          >
-            Next
-          </button>
-        ) : (
-          <button
-            type="button"
-            disabled={saving}
-            onClick={() => onSave(date, [...selected])}
-            className="flex-1 rounded-xl bg-orange-500 py-2.5 text-sm font-bold text-white disabled:opacity-50"
-          >
-            {saving ? 'Saving…' : mode === 'edit' ? 'Save changes' : 'Save training'}
-          </button>
         )}
-      </div>
-    </section>
+
+        {step === 2 && (
+          <div>
+            <p className="mb-2 text-sm text-neutral-500 dark:text-neutral-400">
+              Optionally narrow the exercise list to a focus for this training.
+            </p>
+            <div className="flex flex-wrap gap-2">
+              {CATEGORIES.map((cat) => {
+                const active = activeCategories.includes(cat.id)
+                return (
+                  <button
+                    key={cat.id}
+                    type="button"
+                    onClick={() => toggleCategory(cat.id)}
+                    className={`rounded-full border px-3 py-1.5 text-xs font-medium transition-colors ${
+                      active
+                        ? 'border-orange-500 bg-orange-50 text-orange-700 dark:bg-orange-500/10 dark:text-orange-300'
+                        : 'border-black/10 bg-white text-neutral-600 dark:border-white/10 dark:bg-neutral-900 dark:text-neutral-300'
+                    }`}
+                  >
+                    {cat.emoji} {cat.label}
+                  </button>
+                )
+              })}
+            </div>
+          </div>
+        )}
+
+        {step === 3 && (
+          <div>
+            <p className="mb-2 text-xs text-neutral-500 dark:text-neutral-400">
+              {selected.size} selected · {selectedMinutes}′
+            </p>
+            <div className="space-y-2">
+              {filtered.map((ex) => (
+                <SelectableExerciseCard
+                  key={ex.id}
+                  exercise={ex}
+                  selected={selected.has(ex.id)}
+                  onToggle={() => toggleSelect(ex.id)}
+                />
+              ))}
+            </div>
+          </div>
+        )}
+
+        {step === 4 && (
+          <div className="space-y-3">
+            <div className="rounded-2xl border border-black/10 bg-white px-4 py-3 dark:border-white/10 dark:bg-neutral-900">
+              <p className="text-sm font-bold text-neutral-900 dark:text-neutral-50">
+                {groupLabel} · {formatDate(date)}
+              </p>
+              <p className="text-xs text-neutral-500 dark:text-neutral-400">
+                {selected.size} exercises · {selectedMinutes}′ total
+              </p>
+            </div>
+            <ul className="space-y-1.5">
+              {selectedExercises.map((ex) => (
+                <li
+                  key={ex.id}
+                  className="flex items-center justify-between rounded-xl border border-black/10 bg-white px-3 py-2 text-sm dark:border-white/10 dark:bg-neutral-900"
+                >
+                  <span>
+                    {ex.emoji} {ex.title}
+                  </span>
+                  <span className="text-xs text-neutral-400">{ex.durationMinutes}′</span>
+                </li>
+              ))}
+            </ul>
+            {saveError && <p className="text-xs font-semibold text-red-600">{saveError}</p>}
+          </div>
+        )}
+      </main>
+
+      <footer className="shrink-0 border-t border-black/10 bg-white px-4 py-3 pb-[calc(env(safe-area-inset-bottom)+0.75rem)] dark:border-white/10 dark:bg-neutral-900">
+        <div className="mx-auto flex max-w-md gap-2">
+          <button
+            type="button"
+            onClick={step === 1 ? onCancel : () => setStep((s) => s - 1)}
+            className="flex-1 rounded-xl border border-black/10 py-2.5 text-sm font-semibold text-neutral-600 dark:border-white/10 dark:text-neutral-300"
+          >
+            {step === 1 ? 'Cancel' : 'Back'}
+          </button>
+          {step < STEPS.length ? (
+            <button
+              type="button"
+              disabled={!canGoNext}
+              onClick={() => setStep((s) => s + 1)}
+              className="flex-1 rounded-xl bg-orange-500 py-2.5 text-sm font-bold text-white disabled:opacity-50"
+            >
+              Next
+            </button>
+          ) : (
+            <button
+              type="button"
+              disabled={saving}
+              onClick={() => onSave(date, [...selected])}
+              className="flex-1 rounded-xl bg-orange-500 py-2.5 text-sm font-bold text-white disabled:opacity-50"
+            >
+              {saving ? 'Saving…' : mode === 'edit' ? 'Save changes' : 'Save training'}
+            </button>
+          )}
+        </div>
+      </footer>
+    </div>
   )
 }
