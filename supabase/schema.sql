@@ -22,7 +22,7 @@ create table if not exists clubs (
 );
 
 insert into clubs (slug, name, logo_url)
-values ('dunckers-hilversum', 'Dunckers Hilversum', '/club-logo.png')
+values ('dunckers-hilversum', 'Dunckers Hilversum', '/club-logo.svg')
 on conflict (slug) do nothing;
 
 alter table clubs enable row level security;

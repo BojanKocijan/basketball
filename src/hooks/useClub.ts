@@ -11,7 +11,7 @@ export interface Club {
  * `clubs` table. Once the app serves multiple clubs, this becomes "resolve the active club by
  * slug/subdomain" instead — the DB shape already supports that.
  */
-const FALLBACK_CLUB: Club = { name: 'Dunckers Hilversum', logoUrl: '/club-logo.png' }
+const FALLBACK_CLUB: Club = { name: 'Dunckers Hilversum', logoUrl: '/club-logo.svg' }
 
 export function useClub() {
   const [club, setClub] = useState<Club>(FALLBACK_CLUB)
