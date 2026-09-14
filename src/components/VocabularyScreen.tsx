@@ -13,7 +13,7 @@ export function VocabularyScreen() {
   }, [query])
 
   return (
-    <div className="mx-auto max-w-md space-y-4 px-4 pb-24 pt-[calc(env(safe-area-inset-top)+1rem)]">
+    <div className="mx-auto max-w-md space-y-4 px-4 pb-24 pt-4">
       <header>
         <h1 className="text-xl font-bold text-neutral-900 dark:text-neutral-50">
           Core bilingual vocabulary

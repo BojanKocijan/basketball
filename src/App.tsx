@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react'
 import { BottomNav, type Tab } from './components/BottomNav'
+import { ClubHeader } from './components/ClubHeader'
 import { ExercisesScreen } from './components/ExercisesScreen'
 import { GroupsScreen } from './components/GroupsScreen'
 import { SessionScreen } from './components/SessionScreen'
@@ -10,6 +11,7 @@ import { groupInfo } from './data/groups'
 import { useActiveGroup } from './hooks/useActiveGroup'
 import { useActivePlan } from './hooks/useActivePlan'
 import { usePlans } from './hooks/usePlans'
+import { formatDate } from './utils/format'
 
 function App() {
   const [tab, setTab] = useState<Tab>('groups')
@@ -18,7 +20,7 @@ function App() {
   const { nextPlan } = usePlans(groupId)
 
   // Prefer the shared, dated plan for this group (set up on the Groups tab) once one exists;
-  // otherwise fall back to the local ad-hoc plan built on the Exercises tab.
+  // otherwise fall back to the default full session.
   const sessionPlan = useMemo(() => {
     if (!nextPlan) return activePlan
     const planExercises = nextPlan.exercise_ids
@@ -26,7 +28,7 @@ function App() {
       .filter((e): e is NonNullable<typeof e> => Boolean(e))
     return {
       ...activePlan,
-      planTitle: `${groupInfo(nextPlan.group_id).label} · ${nextPlan.training_date}`,
+      planTitle: `${groupInfo(nextPlan.group_id).label} · ${formatDate(nextPlan.training_date)}`,
       planEmoji: nextPlan.emoji,
       planExercises,
       totalMinutes: planExercises.reduce((sum, e) => sum + e.durationMinutes, 0),
@@ -35,13 +37,12 @@ function App() {
 
   return (
     <div className="min-h-screen bg-neutral-50 dark:bg-neutral-950">
+      <ClubHeader />
       {tab === 'setup' && <SetupScreen />}
       {tab === 'groups' && <GroupsScreen />}
-      {tab === 'exercises' && (
-        <ExercisesScreen activePlan={activePlan} onStartTraining={() => setTab('session')} />
-      )}
+      {tab === 'library' && <ExercisesScreen />}
       {tab === 'session' && (
-        <SessionScreen activePlan={sessionPlan} onBuildPlan={() => setTab('exercises')} />
+        <SessionScreen activePlan={sessionPlan} onBuildPlan={() => setTab('groups')} />
       )}
       {tab === 'vocabulary' && <VocabularyScreen />}
       <BottomNav active={tab} onChange={setTab} />

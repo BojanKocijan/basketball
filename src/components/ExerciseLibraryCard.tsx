@@ -6,15 +6,11 @@ import { RatingWidget } from './RatingWidget'
 
 export function ExerciseLibraryCard({
   exercise,
-  selected,
-  onToggleSelect,
   onRate,
   ratingAverage,
   ratingCount,
 }: {
   exercise: Exercise
-  selected: boolean
-  onToggleSelect: () => void
   onRate: (value: number) => void
   ratingAverage: number | null
   ratingCount: number
@@ -25,43 +21,29 @@ export function ExerciseLibraryCard({
   const ss = remaining % 60
 
   return (
-    <div className="rounded-3xl border border-black/10 bg-white p-4 dark:border-white/10 dark:bg-neutral-900">
-      <div className="flex items-start gap-3">
-        <button
-          type="button"
-          onClick={onToggleSelect}
-          aria-label={selected ? 'Remove from training' : 'Add to training'}
-          className={`mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full border-2 text-xs font-bold ${
-            selected
-              ? 'border-orange-500 bg-orange-500 text-white'
-              : 'border-neutral-300 text-transparent dark:border-neutral-600'
-          }`}
-        >
-          ✓
-        </button>
-        <button type="button" onClick={() => setExpanded((v) => !v)} className="min-w-0 flex-1 text-left">
-          <div className="flex items-center justify-between gap-2">
-            <h3 className="flex items-center gap-2 truncate font-bold text-neutral-900 dark:text-neutral-50">
-              <span>{exercise.emoji}</span>
-              {exercise.title}
-            </h3>
-            <span className="shrink-0 text-xs font-semibold text-neutral-400">
-              {exercise.durationMinutes}′
+    <div className="rounded-2xl border border-black/10 bg-white px-4 py-3 dark:border-white/10 dark:bg-neutral-900">
+      <button type="button" onClick={() => setExpanded((v) => !v)} className="w-full text-left">
+        <div className="flex items-center justify-between gap-2">
+          <h3 className="flex items-center gap-2 truncate font-bold text-neutral-900 dark:text-neutral-50">
+            <span>{exercise.emoji}</span>
+            {exercise.title}
+          </h3>
+          <span className="shrink-0 text-xs font-semibold text-neutral-400">
+            {exercise.durationMinutes}′
+          </span>
+        </div>
+        <p className="mt-0.5 truncate text-xs text-neutral-500 dark:text-neutral-400">
+          {exercise.goal}
+        </p>
+        <div className="mt-2 flex items-center gap-2">
+          <CategoryBadges categories={exercise.categories} />
+          {ratingCount > 0 && ratingAverage !== null && (
+            <span className="shrink-0 text-xs font-medium text-neutral-400">
+              🤩 {ratingAverage.toFixed(1)} · {ratingCount}×
             </span>
-          </div>
-          <p className="mt-0.5 truncate text-xs text-neutral-500 dark:text-neutral-400">
-            {exercise.goal}
-          </p>
-          <div className="mt-2 flex items-center gap-2">
-            <CategoryBadges categories={exercise.categories} />
-            {ratingCount > 0 && ratingAverage !== null && (
-              <span className="shrink-0 text-xs font-medium text-neutral-400">
-                🤩 {ratingAverage.toFixed(1)} · {ratingCount}×
-              </span>
-            )}
-          </div>
-        </button>
-      </div>
+          )}
+        </div>
+      </button>
 
       {expanded && (
         <div className="mt-4 space-y-4 border-t border-black/5 pt-4 dark:border-white/5">

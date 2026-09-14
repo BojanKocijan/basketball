@@ -70,11 +70,31 @@ export function usePlans(groupId: string) {
     await refresh()
   }
 
+  async function updatePlan(
+    passcode: string,
+    id: string,
+    trainingDate: string,
+    title: string,
+    emoji: string,
+    exerciseIds: string[],
+  ) {
+    const { error } = await supabase.rpc('update_plan', {
+      passcode,
+      p_id: id,
+      p_training_date: trainingDate,
+      p_title: title,
+      p_emoji: emoji,
+      p_exercise_ids: exerciseIds,
+    })
+    if (error) throw new Error(error.message)
+    await refresh()
+  }
+
   async function deletePlan(passcode: string, id: string) {
     const { error } = await supabase.rpc('delete_plan', { passcode, p_id: id })
     if (error) throw new Error(error.message)
     await refresh()
   }
 
-  return { plans, upcoming, past, nextPlan, loading, error, refresh, createPlan, deletePlan }
+  return { plans, upcoming, past, nextPlan, loading, error, refresh, createPlan, updatePlan, deletePlan }
 }
