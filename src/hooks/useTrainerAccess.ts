@@ -17,10 +17,17 @@ export function useTrainerAccess() {
       return false
     }
   })
+  const [passcodeValue, setPasscodeValue] = useState(() => {
+    try {
+      return localStorage.getItem(PASSCODE_KEY) ?? ''
+    } catch {
+      return ''
+    }
+  })
   const [checking, setChecking] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
-  const tryUnlock = useCallback(async (code: string) => {
+  const tryUnlock = useCallback(async (code: string, remember: boolean) => {
     setChecking(true)
     setError(null)
     const { data, error } = await supabase.rpc('verify_passcode', { input: code })
@@ -34,11 +41,18 @@ export function useTrainerAccess() {
       return false
     }
     try {
-      localStorage.setItem(UNLOCKED_KEY, '1')
-      localStorage.setItem(PASSCODE_KEY, code)
+      if (remember) {
+        localStorage.setItem(UNLOCKED_KEY, '1')
+        localStorage.setItem(PASSCODE_KEY, code)
+      } else {
+        // Stay unlocked for this session only — nothing written to disk.
+        localStorage.removeItem(UNLOCKED_KEY)
+        localStorage.removeItem(PASSCODE_KEY)
+      }
     } catch {
       // storage unavailable; ignore
     }
+    setPasscodeValue(code)
     setUnlocked(true)
     return true
   }, [])
@@ -50,16 +64,11 @@ export function useTrainerAccess() {
     } catch {
       // storage unavailable; ignore
     }
+    setPasscodeValue('')
     setUnlocked(false)
   }, [])
 
-  const passcode = () => {
-    try {
-      return localStorage.getItem(PASSCODE_KEY) ?? ''
-    } catch {
-      return ''
-    }
-  }
+  const passcode = useCallback(() => passcodeValue, [passcodeValue])
 
   return { unlocked, checking, error, tryUnlock, lock, passcode }
 }

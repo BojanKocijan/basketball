@@ -12,7 +12,7 @@ import { useActivePlan } from './hooks/useActivePlan'
 import { usePlans } from './hooks/usePlans'
 
 function App() {
-  const [tab, setTab] = useState<Tab>('session')
+  const [tab, setTab] = useState<Tab>('groups')
   const activePlan = useActivePlan()
   const { groupId } = useActiveGroup()
   const { nextPlan } = usePlans(groupId)
