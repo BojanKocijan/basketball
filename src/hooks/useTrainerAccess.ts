@@ -1,25 +1,28 @@
-import { useCallback, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { api } from '../lib/apiClient'
 
-const UNLOCKED_KEY = 'u8-trainer-unlocked'
-const PASSCODE_KEY = 'u8-trainer-passcode'
+const unlockedKey = (groupId: string) => `u8-trainer-unlocked-${groupId}`
+const passcodeKey = (groupId: string) => `u8-trainer-passcode-${groupId}`
 
 /**
- * Gates the write actions (planning/editing/deleting trainings) behind the shared trainer
- * passcode. The passcode is checked server-side by sports-training-api (via its
- * verify_passcode RPC) — it never lives anywhere the browser can read it directly.
+ * Gates the write actions (planning/editing/deleting trainings) behind a group's trainer
+ * passcode. Each group has its own passcode (a code valid for one group does not unlock
+ * another), so unlock state is scoped and stored per groupId — switching groups re-locks
+ * unless that group was separately unlocked and remembered on this device. The passcode is
+ * checked server-side by sports-training-api (via its verify_passcode RPC) — it never lives
+ * anywhere the browser can read it directly.
  */
-export function useTrainerAccess() {
+export function useTrainerAccess(groupId: string) {
   const [unlocked, setUnlocked] = useState(() => {
     try {
-      return localStorage.getItem(UNLOCKED_KEY) === '1'
+      return localStorage.getItem(unlockedKey(groupId)) === '1'
     } catch {
       return false
     }
   })
   const [passcodeValue, setPasscodeValue] = useState(() => {
     try {
-      return localStorage.getItem(PASSCODE_KEY) ?? ''
+      return localStorage.getItem(passcodeKey(groupId)) ?? ''
     } catch {
       return ''
     }
@@ -27,52 +30,68 @@ export function useTrainerAccess() {
   const [checking, setChecking] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
-  const tryUnlock = useCallback(async (code: string, remember: boolean) => {
-    setChecking(true)
+  // Re-derive from this group's own stored state whenever the active group changes.
+  useEffect(() => {
+    try {
+      setUnlocked(localStorage.getItem(unlockedKey(groupId)) === '1')
+      setPasscodeValue(localStorage.getItem(passcodeKey(groupId)) ?? '')
+    } catch {
+      setUnlocked(false)
+      setPasscodeValue('')
+    }
     setError(null)
-    let valid: boolean
-    try {
-      const result = await api.post<{ valid: boolean }>('/auth/verify-passcode', {
-        passcode: code,
-      })
-      valid = result.valid
-    } catch {
-      setChecking(false)
-      setError('Could not check the code — is the API set up yet?')
-      return false
-    }
-    setChecking(false)
-    if (!valid) {
-      setError('Wrong code, try again.')
-      return false
-    }
-    try {
-      if (remember) {
-        localStorage.setItem(UNLOCKED_KEY, '1')
-        localStorage.setItem(PASSCODE_KEY, code)
-      } else {
-        // Stay unlocked for this session only — nothing written to disk.
-        localStorage.removeItem(UNLOCKED_KEY)
-        localStorage.removeItem(PASSCODE_KEY)
+  }, [groupId])
+
+  const tryUnlock = useCallback(
+    async (code: string, remember: boolean) => {
+      setChecking(true)
+      setError(null)
+      let valid: boolean
+      try {
+        const result = await api.post<{ valid: boolean }>('/auth/verify-passcode', {
+          groupId,
+          passcode: code,
+        })
+        valid = result.valid
+      } catch {
+        setChecking(false)
+        setError('Could not check the code — is the API set up yet?')
+        return false
       }
-    } catch {
-      // storage unavailable; ignore
-    }
-    setPasscodeValue(code)
-    setUnlocked(true)
-    return true
-  }, [])
+      setChecking(false)
+      if (!valid) {
+        setError('Wrong code, try again.')
+        return false
+      }
+      try {
+        if (remember) {
+          localStorage.setItem(unlockedKey(groupId), '1')
+          localStorage.setItem(passcodeKey(groupId), code)
+        } else {
+          // Stay unlocked for this session only — nothing written to disk.
+          localStorage.removeItem(unlockedKey(groupId))
+          localStorage.removeItem(passcodeKey(groupId))
+        }
+      } catch {
+        // storage unavailable; ignore
+      }
+      setPasscodeValue(code)
+      setUnlocked(true)
+      return true
+    },
+    [groupId],
+  )
 
   const lock = useCallback(() => {
     try {
-      localStorage.removeItem(UNLOCKED_KEY)
-      localStorage.removeItem(PASSCODE_KEY)
+      localStorage.removeItem(unlockedKey(groupId))
+      localStorage.removeItem(passcodeKey(groupId))
     } catch {
       // storage unavailable; ignore
     }
     setPasscodeValue('')
     setUnlocked(false)
-  }, [])
+  }, [groupId])
 
   const passcode = useCallback(() => passcodeValue, [passcodeValue])
 

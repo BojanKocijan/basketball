@@ -20,7 +20,8 @@ function App() {
   const { groupId } = useActiveGroup()
   const { nextPlan } = usePlans(groupId)
   // Shared across tabs so a trainer code entered on Groups also unlocks session controls.
-  const trainerAccess = useTrainerAccess()
+  // Scoped to the active group — each group has its own passcode.
+  const trainerAccess = useTrainerAccess(groupId)
 
   // Prefer the shared, dated plan for this group (set up on the Groups tab) once one exists;
   // otherwise fall back to the default full session.
