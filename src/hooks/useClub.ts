@@ -11,6 +11,9 @@ export interface Club {
  * Only one club exists today (Dunckers Hilversum), so this just reads the first row from the
  * `clubs` table. Once the app serves multiple clubs, this becomes "resolve the active club by
  * slug/subdomain" instead — the DB shape already supports that.
+ *
+ * No sport here — a club can run several sport sections (see src/data/groups.ts), so sport is
+ * a property of the active group, not the club.
  */
 const FALLBACK_CLUB: Club = { name: 'Dunckers Hilversum', logoUrl: 'logos/deDunkers.png' }
 

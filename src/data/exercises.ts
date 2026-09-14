@@ -1,4 +1,6 @@
 import type { CategoryId } from './categories'
+import type { SportId } from './sports'
+import { DEFAULT_SPORT_ID } from './sports'
 
 export interface Cue {
   nl: string
@@ -21,7 +23,10 @@ export interface Exercise {
   isBreak?: boolean
 }
 
-export const exercises: Exercise[] = [
+/** Exercise library, per sport — basketball is the only sport with content today. Add a new
+ * key here when a sport (see ./sports) actually gets its own exercises. */
+const EXERCISES_BY_SPORT: Record<SportId, Exercise[]> = {
+  basketball: [
   {
     id: 'welcome',
     emoji: '👋',
@@ -305,7 +310,16 @@ export const exercises: Exercise[] = [
       'Invite the children to show parents one favourite move, or take a final group shot while parents cheer.',
     ],
   },
-]
+  ],
+}
+
+/** Exercise library for the app's current sport. Once a club can run more than one sport at
+ * a time, this becomes a lookup by the active group's sportId instead of the default. */
+export const exercises: Exercise[] = EXERCISES_BY_SPORT[DEFAULT_SPORT_ID]
+
+export function exercisesForSport(sportId: SportId): Exercise[] {
+  return EXERCISES_BY_SPORT[sportId] ?? []
+}
 
 export function findExercise(id: string): Exercise | undefined {
   return exercises.find((e) => e.id === id)
