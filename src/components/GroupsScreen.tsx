@@ -3,7 +3,7 @@ import { GROUPS } from '../data/groups'
 import { useActiveGroup } from '../hooks/useActiveGroup'
 import { usePlans, type TrainingPlan } from '../hooks/usePlans'
 import { useTrainerAccess } from '../hooks/useTrainerAccess'
-import { isSupabaseConfigured } from '../lib/supabaseClient'
+import { isApiConfigured } from '../lib/apiClient'
 import { formatDate } from '../utils/format'
 import { PlanTrainingWizard } from './PlanTrainingWizard'
 
@@ -89,11 +89,10 @@ export function GroupsScreen() {
         </p>
       </header>
 
-      {!isSupabaseConfigured && (
+      {!isApiConfigured && (
         <div className="rounded-2xl border border-amber-300 bg-amber-50 p-3 text-xs text-amber-800 dark:border-amber-500/30 dark:bg-amber-500/10 dark:text-amber-300">
-          Shared planning isn't set up yet — add <code>VITE_SUPABASE_URL</code> and{' '}
-          <code>VITE_SUPABASE_ANON_KEY</code> (see <code>.env.example</code>) to connect a Supabase
-          project.
+          Shared planning isn't set up yet — add <code>VITE_API_URL</code> (see{' '}
+          <code>.env.example</code>) to connect a sports-training-api deployment.
         </div>
       )}
 

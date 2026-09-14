@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { isSupabaseConfigured, supabase } from '../lib/supabaseClient'
+import { api, isApiConfigured } from '../lib/apiClient'
 
 export interface Club {
   name: string
@@ -9,28 +9,34 @@ export interface Club {
 
 /**
  * Only one club exists today (Dunckers Hilversum), so this just reads the first row from the
- * `clubs` table. Once the app serves multiple clubs, this becomes "resolve the active club by
- * slug/subdomain" instead — the DB shape already supports that.
+ * `clubs` table via sports-training-api. Once the app serves multiple clubs, this becomes
+ * "resolve the active club by slug/subdomain" instead — the DB shape already supports that.
  *
  * No sport here — a club can run several sport sections (see src/data/groups.ts), so sport is
  * a property of the active group, not the club.
  */
 const FALLBACK_CLUB: Club = { name: 'Dunckers Hilversum', logoUrl: 'logos/deDunkers.png' }
 
+interface ClubRecord {
+  name: string
+  logo_url: string | null
+}
+
 export function useClub() {
   const [club, setClub] = useState<Club>(FALLBACK_CLUB)
 
   useEffect(() => {
-    if (!isSupabaseConfigured) return
+    if (!isApiConfigured) return
     let cancelled = false
-    supabase
-      .from('clubs')
-      .select('name, logo_url')
-      .limit(1)
-      .maybeSingle()
-      .then(({ data }) => {
-        if (cancelled || !data) return
-        setClub({ name: data.name, logoUrl: data.logo_url })
+    api
+      .get<ClubRecord[]>('/clubs')
+      .then((data) => {
+        const first = data[0]
+        if (cancelled || !first) return
+        setClub({ name: first.name, logoUrl: first.logo_url })
+      })
+      .catch(() => {
+        // keep the fallback club on error
       })
     return () => {
       cancelled = true
