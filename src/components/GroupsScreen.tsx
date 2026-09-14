@@ -234,17 +234,21 @@ export function GroupsScreen() {
       </section>
 
       {formOpen && (
-        <PlanTrainingWizard
-          key={editingPlan?.id ?? 'new'}
-          mode={editingPlan ? 'edit' : 'create'}
-          initialDate={editingPlan?.training_date ?? ''}
-          initialExerciseIds={editingPlan?.exercise_ids ?? []}
-          groupLabel={group.label}
-          saving={saving}
-          saveError={saveError}
-          onCancel={closeForm}
-          onSave={savePlan}
-        />
+        <div className="fixed inset-0 z-20 flex items-end justify-center bg-black/40 px-4 pb-20 sm:items-center sm:pb-4">
+          <div className="max-h-[85vh] w-full max-w-md overflow-y-auto">
+            <PlanTrainingWizard
+              key={editingPlan?.id ?? 'new'}
+              mode={editingPlan ? 'edit' : 'create'}
+              initialDate={editingPlan?.training_date ?? ''}
+              initialExerciseIds={editingPlan?.exercise_ids ?? []}
+              groupLabel={group.label}
+              saving={saving}
+              saveError={saveError}
+              onCancel={closeForm}
+              onSave={savePlan}
+            />
+          </div>
+        </div>
       )}
 
       {past.length > 0 && (

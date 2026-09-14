@@ -20,7 +20,7 @@ export function ExercisesScreen() {
   return (
     <div className="mx-auto max-w-md space-y-4 px-4 pb-24 pt-4">
       <header>
-        <h1 className="text-xl font-bold text-neutral-900 dark:text-neutral-50">Exercises</h1>
+        <h1 className="text-xl font-bold text-neutral-900 dark:text-neutral-50">Exercise library</h1>
         <p className="text-sm text-neutral-500 dark:text-neutral-400">
           The full exercise library. Tap one to see the steps, run its timer, or rate it.
         </p>

@@ -20,7 +20,7 @@ function App() {
   const { nextPlan } = usePlans(groupId)
 
   // Prefer the shared, dated plan for this group (set up on the Groups tab) once one exists;
-  // otherwise fall back to the local ad-hoc plan built on the Exercises tab.
+  // otherwise fall back to the default full session.
   const sessionPlan = useMemo(() => {
     if (!nextPlan) return activePlan
     const planExercises = nextPlan.exercise_ids
@@ -40,7 +40,7 @@ function App() {
       <ClubHeader />
       {tab === 'setup' && <SetupScreen />}
       {tab === 'groups' && <GroupsScreen />}
-      {tab === 'exercises' && <ExercisesScreen />}
+      {tab === 'library' && <ExercisesScreen />}
       {tab === 'session' && (
         <SessionScreen activePlan={sessionPlan} onBuildPlan={() => setTab('groups')} />
       )}
