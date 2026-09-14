@@ -1,7 +1,9 @@
-import { useMemo } from 'react'
+import { useEffect, useMemo, useRef } from 'react'
 import type { useActivePlan } from '../hooks/useActivePlan'
+import { useFullscreen } from '../hooks/useFullscreen'
 import { useRatings } from '../hooks/useRatings'
 import { useSessionClock } from '../hooks/useSessionClock'
+import { notify, requestNotificationPermission } from '../lib/notify'
 import { formatClock } from '../utils/format'
 import { ExerciseTimeline } from './ExerciseTimeline'
 
@@ -15,6 +17,7 @@ export function SessionScreen({
   const { planTitle, planEmoji, planExercises, totalMinutes } = activePlan
   const { elapsedSeconds, running, start, pause, reset, jumpTo } = useSessionClock()
   const { rate, stats } = useRatings()
+  const { enter: enterFullscreen, exit: exitFullscreen } = useFullscreen()
   const totalSeconds = totalMinutes * 60
 
   // cumulative start/end (in seconds) for each exercise, derived from the active plan's order —
@@ -39,6 +42,29 @@ export function SessionScreen({
   const isSessionDone = elapsedSeconds >= totalSeconds
 
   const overallPct = totalSeconds > 0 ? Math.min(100, (elapsedSeconds / totalSeconds) * 100) : 0
+
+  // Notify when a segment's time naturally runs out (one tick at a time while running) — not on
+  // manual prev/next/reset, which jump elapsedSeconds instead of incrementing it by one.
+  const lastElapsedRef = useRef(elapsedSeconds)
+  useEffect(() => {
+    const previousElapsed = lastElapsedRef.current
+    lastElapsedRef.current = elapsedSeconds
+    if (!running || elapsedSeconds - previousElapsed !== 1) return
+
+    const finishedIndex = timeline.findIndex((t) => t.endSec === elapsedSeconds)
+    if (finishedIndex === -1) return
+
+    const finished = timeline[finishedIndex].exercise
+    const next = timeline[finishedIndex + 1]?.exercise
+    notify(
+      next ? `Time's up: ${finished.title}` : 'Session complete! 🏆',
+      next ? `Next: ${next.emoji} ${next.title}` : 'Great job, coaches — time for high-fives.',
+    )
+  }, [elapsedSeconds, running, timeline])
+
+  useEffect(() => {
+    if (isSessionDone) exitFullscreen()
+  }, [isSessionDone, exitFullscreen])
 
   function goToIndex(index: number) {
     const target = timeline[Math.max(0, Math.min(timeline.length - 1, index))]
@@ -128,7 +154,15 @@ export function SessionScreen({
           </button>
           <button
             type="button"
-            onClick={running ? pause : start}
+            onClick={() => {
+              if (running) {
+                pause()
+                return
+              }
+              requestNotificationPermission()
+              enterFullscreen()
+              start()
+            }}
             className="col-span-2 rounded-2xl bg-orange-500 py-3 text-sm font-bold text-white shadow-sm active:bg-orange-600"
           >
             {running ? '⏸ Pause' : '▶ Start'}
@@ -144,7 +178,10 @@ export function SessionScreen({
         </div>
         <button
           type="button"
-          onClick={reset}
+          onClick={() => {
+            exitFullscreen()
+            reset()
+          }}
           className="w-full px-4 py-2 text-xs font-semibold text-neutral-400 active:text-neutral-600 dark:text-neutral-500"
         >
           Reset session clock
