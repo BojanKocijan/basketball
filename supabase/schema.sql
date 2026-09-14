@@ -10,9 +10,36 @@
 
 create extension if not exists pgcrypto;
 
+-- Sports this app can run training plans for. Basketball is the first — a club's sport_id
+-- is what makes categories/exercises (still basketball-only client-side, see
+-- src/data/categories.ts and src/data/exercises.ts) apply to the right club.
+create table if not exists sports (
+  id text primary key,
+  name text not null,
+  emoji text not null
+);
+
+insert into sports (id, name, emoji)
+values ('basketball', 'Basketball', '🏀')
+on conflict (id) do nothing;
+
+alter table sports enable row level security;
+
+drop policy if exists "sports are publicly readable" on sports;
+create policy "sports are publicly readable" on sports
+  for select using (true);
+
+grant select on sports to anon;
+revoke insert, update, delete on sports from anon;
+
 -- Clubs this app serves. Today there's exactly one (Dunckers Hilversum) and the app just
 -- reads the first row, but modeling it as a table now means multi-club support later is a
 -- matter of resolving the active club (e.g. by slug/subdomain) rather than a schema change.
+--
+-- Sport lives on the GROUP, not here: a Dutch club (vereniging) commonly runs several sport
+-- sections under one roof (Dunckers could add a hockey or korfbal afdeling later), so the
+-- club itself stays sport-agnostic. Groups aren't a DB table yet (see src/data/groups.ts —
+-- still a client-side config list), so that's where sportId lives for now.
 create table if not exists clubs (
   id uuid primary key default gen_random_uuid(),
   slug text not null unique,
