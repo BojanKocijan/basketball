@@ -3,6 +3,7 @@ import { CATEGORIES, type CategoryId } from '../data/categories'
 import { exercises, findExercise } from '../data/exercises'
 import { formatDate } from '../utils/format'
 import { Calendar } from './Calendar'
+import { CategoryCard } from './CategoryCard'
 import { SelectableExerciseCard } from './SelectableExerciseCard'
 
 const STEPS = ['When?', 'Focus', 'Exercises', 'Review'] as const
@@ -118,24 +119,15 @@ export function PlanTrainingWizard({
             <p className="mb-2 text-sm text-neutral-500 dark:text-neutral-400">
               Optionally narrow the exercise list to a focus for this training.
             </p>
-            <div className="flex flex-wrap gap-2">
-              {CATEGORIES.map((cat) => {
-                const active = activeCategories.includes(cat.id)
-                return (
-                  <button
-                    key={cat.id}
-                    type="button"
-                    onClick={() => toggleCategory(cat.id)}
-                    className={`rounded-full border px-3 py-1.5 text-xs font-medium transition-colors ${
-                      active
-                        ? 'border-orange-500 bg-orange-50 text-orange-700 dark:bg-orange-500/10 dark:text-orange-300'
-                        : 'border-black/10 bg-white text-neutral-600 dark:border-white/10 dark:bg-neutral-900 dark:text-neutral-300'
-                    }`}
-                  >
-                    {cat.emoji} {cat.label}
-                  </button>
-                )
-              })}
+            <div className="grid grid-cols-2 gap-3">
+              {CATEGORIES.map((cat) => (
+                <CategoryCard
+                  key={cat.id}
+                  categoryId={cat.id}
+                  active={activeCategories.includes(cat.id)}
+                  onToggle={() => toggleCategory(cat.id)}
+                />
+              ))}
             </div>
           </div>
         )}
