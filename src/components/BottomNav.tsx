@@ -1,7 +1,8 @@
-export type Tab = 'setup' | 'exercises' | 'session' | 'vocabulary'
+export type Tab = 'setup' | 'groups' | 'exercises' | 'session' | 'vocabulary'
 
 const TABS: { id: Tab; label: string; emoji: string }[] = [
   { id: 'setup', label: 'Setup', emoji: '📋' },
+  { id: 'groups', label: 'Groups', emoji: '👥' },
   { id: 'exercises', label: 'Exercises', emoji: '🏀' },
   { id: 'session', label: 'Session', emoji: '⏱️' },
   { id: 'vocabulary', label: 'Words', emoji: '💬' },
