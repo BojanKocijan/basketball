@@ -3,19 +3,28 @@ import type { useActivePlan } from '../hooks/useActivePlan'
 import { useFullscreen } from '../hooks/useFullscreen'
 import { useRatings } from '../hooks/useRatings'
 import { useSessionClock } from '../hooks/useSessionClock'
+import type { useTrainerAccess } from '../hooks/useTrainerAccess'
 import { notify, requestNotificationPermission } from '../lib/notify'
 import { formatClock } from '../utils/format'
 import { ExerciseTimeline } from './ExerciseTimeline'
 
 export function SessionScreen({
   activePlan,
+  groupId,
+  trainerAccess,
   onBuildPlan,
 }: {
   activePlan: ReturnType<typeof useActivePlan>
+  groupId: string
+  trainerAccess: ReturnType<typeof useTrainerAccess>
   onBuildPlan: () => void
 }) {
   const { planTitle, planEmoji, planExercises, totalMinutes } = activePlan
-  const { elapsedSeconds, running, start, pause, reset, jumpTo } = useSessionClock()
+  const { unlocked, passcode } = trainerAccess
+  const { elapsedSeconds, running, controlError, start, pause, reset, jumpTo } = useSessionClock(
+    groupId,
+    passcode,
+  )
   const { rate, stats } = useRatings()
   const { enter: enterFullscreen, exit: exitFullscreen } = useFullscreen()
   const totalSeconds = totalMinutes * 60
@@ -67,6 +76,7 @@ export function SessionScreen({
   }, [isSessionDone, exitFullscreen])
 
   function goToIndex(index: number) {
+    if (!unlocked) return
     const target = timeline[Math.max(0, Math.min(timeline.length - 1, index))]
     jumpTo(target.startSec)
   }
@@ -117,6 +127,12 @@ export function SessionScreen({
             style={{ width: `${overallPct}%` }}
           />
         </div>
+        <p className="mt-1.5 text-[11px] font-semibold text-neutral-400 dark:text-neutral-500">
+          {unlocked
+            ? '🔓 Synced live — controls here apply to every trainer'
+            : '🔒 Viewing live — unlock trainer access on Groups to control'}
+        </p>
+        {controlError && <p className="mt-1 text-xs font-semibold text-red-600">{controlError}</p>}
       </header>
 
       <main className="space-y-4 pt-2">
@@ -147,13 +163,14 @@ export function SessionScreen({
           <button
             type="button"
             onClick={() => goToIndex(currentIndex - 1)}
-            disabled={currentIndex === 0}
+            disabled={!unlocked || currentIndex === 0}
             className="rounded-2xl border border-black/10 py-3 text-sm font-semibold text-neutral-700 disabled:opacity-30 dark:border-white/10 dark:text-neutral-200"
           >
             ⏮ Prev
           </button>
           <button
             type="button"
+            disabled={!unlocked}
             onClick={() => {
               if (running) {
                 pause()
@@ -163,29 +180,31 @@ export function SessionScreen({
               enterFullscreen()
               start()
             }}
-            className="col-span-2 rounded-2xl bg-orange-500 py-3 text-sm font-bold text-white shadow-sm active:bg-orange-600"
+            className="col-span-2 rounded-2xl bg-orange-500 py-3 text-sm font-bold text-white shadow-sm active:bg-orange-600 disabled:opacity-30"
           >
             {running ? '⏸ Pause' : '▶ Start'}
           </button>
           <button
             type="button"
             onClick={() => goToIndex(currentIndex + 1)}
-            disabled={currentIndex === timeline.length - 1}
+            disabled={!unlocked || currentIndex === timeline.length - 1}
             className="rounded-2xl border border-black/10 py-3 text-sm font-semibold text-neutral-700 disabled:opacity-30 dark:border-white/10 dark:text-neutral-200"
           >
             Next ⏭
           </button>
         </div>
-        <button
-          type="button"
-          onClick={() => {
-            exitFullscreen()
-            reset()
-          }}
-          className="w-full px-4 py-2 text-xs font-semibold text-neutral-400 active:text-neutral-600 dark:text-neutral-500"
-        >
-          Reset session clock
-        </button>
+        {unlocked && (
+          <button
+            type="button"
+            onClick={() => {
+              exitFullscreen()
+              reset()
+            }}
+            className="w-full px-4 py-2 text-xs font-semibold text-neutral-400 active:text-neutral-600 dark:text-neutral-500"
+          >
+            Reset session clock
+          </button>
+        )}
       </main>
     </div>
   )

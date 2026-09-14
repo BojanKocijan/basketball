@@ -2,14 +2,14 @@ import { useState } from 'react'
 import { GROUPS } from '../data/groups'
 import { useActiveGroup } from '../hooks/useActiveGroup'
 import { usePlans, type TrainingPlan } from '../hooks/usePlans'
-import { useTrainerAccess } from '../hooks/useTrainerAccess'
+import type { useTrainerAccess } from '../hooks/useTrainerAccess'
 import { isApiConfigured } from '../lib/apiClient'
 import { formatDate } from '../utils/format'
 import { PlanTrainingWizard } from './PlanTrainingWizard'
 
-export function GroupsScreen() {
+export function GroupsScreen({ trainerAccess }: { trainerAccess: ReturnType<typeof useTrainerAccess> }) {
   const { groupId, setGroupId, group } = useActiveGroup()
-  const { unlocked, checking, error: authError, tryUnlock, lock, passcode } = useTrainerAccess()
+  const { unlocked, checking, error: authError, tryUnlock, lock, passcode } = trainerAccess
   const { plans, upcoming, past, loading, error, createPlan, updatePlan, deletePlan } = usePlans(groupId)
 
   const [codeInput, setCodeInput] = useState('')
