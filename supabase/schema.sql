@@ -10,6 +10,30 @@
 
 create extension if not exists pgcrypto;
 
+-- Clubs this app serves. Today there's exactly one (Dunckers Hilversum) and the app just
+-- reads the first row, but modeling it as a table now means multi-club support later is a
+-- matter of resolving the active club (e.g. by slug/subdomain) rather than a schema change.
+create table if not exists clubs (
+  id uuid primary key default gen_random_uuid(),
+  slug text not null unique,
+  name text not null,
+  logo_url text,
+  created_at timestamptz not null default now()
+);
+
+insert into clubs (slug, name, logo_url)
+values ('dunckers-hilversum', 'Dunckers Hilversum', '/club-logo.png')
+on conflict (slug) do nothing;
+
+alter table clubs enable row level security;
+
+drop policy if exists "clubs are publicly readable" on clubs;
+create policy "clubs are publicly readable" on clubs
+  for select using (true);
+
+grant select on clubs to anon;
+revoke insert, update, delete on clubs from anon;
+
 create table if not exists plans (
   id uuid primary key default gen_random_uuid(),
   group_id text not null,
