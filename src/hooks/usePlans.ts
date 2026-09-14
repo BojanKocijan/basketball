@@ -8,7 +8,6 @@ export interface TrainingPlan {
   title: string
   emoji: string
   exercise_ids: string[]
-  created_by: string | null
   created_at: string
   updated_at: string
 }
@@ -58,7 +57,6 @@ export function usePlans(groupId: string) {
     title: string,
     emoji: string,
     exerciseIds: string[],
-    createdBy: string,
   ) {
     const { error } = await supabase.rpc('create_plan', {
       passcode,
@@ -67,7 +65,6 @@ export function usePlans(groupId: string) {
       p_title: title,
       p_emoji: emoji,
       p_exercise_ids: exerciseIds,
-      p_created_by: createdBy,
     })
     if (error) throw new Error(error.message)
     await refresh()

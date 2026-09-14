@@ -56,7 +56,7 @@ export function GroupsScreen() {
     setSaving(true)
     setSaveError(null)
     try {
-      await createPlan(passcode(), date, `${group.label} training`, group.emoji, [...selected], '')
+      await createPlan(passcode(), date, `${group.label} training`, group.emoji, [...selected])
       setPlanning(false)
     } catch (e) {
       setSaveError(e instanceof Error ? e.message : 'Could not save training')

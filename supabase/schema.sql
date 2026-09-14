@@ -2,6 +2,11 @@
 -- Shared, dated training plans for U8 Basketball Training, writable by any trainer who knows
 -- the team passcode. Reads are public; writes go through passcode-checked RPC functions only
 -- (the passcode itself is never exposed to the browser).
+--
+-- GDPR note (see ../PRIVACY.md): this schema intentionally stores NO personal data at all --
+-- no names, emails, or anything identifying a trainer or a child, just plan dates and which
+-- exercises they contain. When creating the Supabase project, pick an EU region (e.g.
+-- Frankfurt / eu-central-1) to keep data residency in the EU/EEA for when that changes.
 
 create extension if not exists pgcrypto;
 
@@ -12,7 +17,6 @@ create table if not exists plans (
   title text not null,
   emoji text not null default '🏀',
   exercise_ids text[] not null default '{}',
-  created_by text,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
 );
@@ -59,8 +63,7 @@ create or replace function create_plan(
   p_training_date date,
   p_title text,
   p_emoji text,
-  p_exercise_ids text[],
-  p_created_by text
+  p_exercise_ids text[]
 )
 returns plans
 language plpgsql
@@ -73,8 +76,8 @@ begin
   if not verify_passcode(passcode) then
     raise exception 'invalid passcode';
   end if;
-  insert into plans (group_id, training_date, title, emoji, exercise_ids, created_by)
-  values (p_group_id, p_training_date, p_title, p_emoji, p_exercise_ids, nullif(p_created_by, ''))
+  insert into plans (group_id, training_date, title, emoji, exercise_ids)
+  values (p_group_id, p_training_date, p_title, p_emoji, p_exercise_ids)
   returning * into result;
   return result;
 end;
@@ -130,6 +133,6 @@ $$;
 grant select on plans to anon;
 revoke insert, update, delete on plans from anon;
 grant execute on function verify_passcode(text) to anon;
-grant execute on function create_plan(text, text, date, text, text, text[], text) to anon;
+grant execute on function create_plan(text, text, date, text, text, text[]) to anon;
 grant execute on function update_plan(text, uuid, date, text, text, text[]) to anon;
 grant execute on function delete_plan(text, uuid) to anon;
