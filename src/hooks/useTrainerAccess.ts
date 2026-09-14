@@ -1,13 +1,13 @@
 import { useCallback, useState } from 'react'
-import { supabase } from '../lib/supabaseClient'
+import { api } from '../lib/apiClient'
 
 const UNLOCKED_KEY = 'u8-trainer-unlocked'
 const PASSCODE_KEY = 'u8-trainer-passcode'
 
 /**
  * Gates the write actions (planning/editing/deleting trainings) behind the shared trainer
- * passcode. The passcode is checked server-side via the verify_passcode RPC — it never lives
- * in a Supabase table the browser can read, only in app_config which has no select policy.
+ * passcode. The passcode is checked server-side by sports-training-api (via its
+ * verify_passcode RPC) — it never lives anywhere the browser can read it directly.
  */
 export function useTrainerAccess() {
   const [unlocked, setUnlocked] = useState(() => {
@@ -30,13 +30,19 @@ export function useTrainerAccess() {
   const tryUnlock = useCallback(async (code: string, remember: boolean) => {
     setChecking(true)
     setError(null)
-    const { data, error } = await supabase.rpc('verify_passcode', { input: code })
-    setChecking(false)
-    if (error) {
-      setError('Could not check the code — is Supabase set up yet?')
+    let valid: boolean
+    try {
+      const result = await api.post<{ valid: boolean }>('/auth/verify-passcode', {
+        passcode: code,
+      })
+      valid = result.valid
+    } catch {
+      setChecking(false)
+      setError('Could not check the code — is the API set up yet?')
       return false
     }
-    if (!data) {
+    setChecking(false)
+    if (!valid) {
       setError('Wrong code, try again.')
       return false
     }

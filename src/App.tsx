@@ -11,6 +11,7 @@ import { groupInfo } from './data/groups'
 import { useActiveGroup } from './hooks/useActiveGroup'
 import { useActivePlan } from './hooks/useActivePlan'
 import { usePlans } from './hooks/usePlans'
+import { useTrainerAccess } from './hooks/useTrainerAccess'
 import { formatDate } from './utils/format'
 
 function App() {
@@ -18,6 +19,8 @@ function App() {
   const activePlan = useActivePlan()
   const { groupId } = useActiveGroup()
   const { nextPlan } = usePlans(groupId)
+  // Shared across tabs so a trainer code entered on Groups also unlocks session controls.
+  const trainerAccess = useTrainerAccess()
 
   // Prefer the shared, dated plan for this group (set up on the Groups tab) once one exists;
   // otherwise fall back to the default full session.
@@ -39,10 +42,15 @@ function App() {
     <div className="min-h-screen bg-neutral-50 dark:bg-neutral-950">
       <ClubHeader />
       {tab === 'setup' && <SetupScreen />}
-      {tab === 'groups' && <GroupsScreen />}
+      {tab === 'groups' && <GroupsScreen trainerAccess={trainerAccess} />}
       {tab === 'library' && <ExercisesScreen />}
       {tab === 'session' && (
-        <SessionScreen activePlan={sessionPlan} onBuildPlan={() => setTab('groups')} />
+        <SessionScreen
+          activePlan={sessionPlan}
+          groupId={groupId}
+          trainerAccess={trainerAccess}
+          onBuildPlan={() => setTab('groups')}
+        />
       )}
       {tab === 'vocabulary' && <VocabularyScreen />}
       <BottomNav active={tab} onChange={setTab} />

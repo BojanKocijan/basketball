@@ -29,4 +29,4 @@ npm run build
 
 Deployed via Netlify, connected to this repo's GitHub App integration — every push to `main` builds and deploys automatically (see `netlify.toml`; the build runs the unit suite before `vite build`, so a failing test blocks a bad deploy). No GitHub Pages — this repo previously also deployed there, but that's been dropped in favor of Netlify only.
 
-Exercise ratings and history are stored per-device in `localStorage`. Shared, dated training plans currently talk to Supabase directly from the browser (`src/lib/supabaseClient.ts`) — migrating that to go through [`sports-training-api`](https://github.com/BojanKocijan/sports-training-api) instead is planned but not yet done.
+Exercise ratings and history are stored per-device in `localStorage`. Shared, dated training plans, club info, and the trainer passcode check go through [`sports-training-api`](https://github.com/BojanKocijan/sports-training-api) (`src/lib/apiClient.ts`) — the browser never talks to Supabase directly. Set `VITE_API_URL` (see `.env.example`) to point at your API deployment.

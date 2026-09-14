@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react'
-import { isSupabaseConfigured, supabase } from '../lib/supabaseClient'
+import { api, isApiConfigured } from '../lib/apiClient'
 import { toLocalIso } from '../utils/format'
 
 export interface TrainingPlan {
@@ -13,30 +13,27 @@ export interface TrainingPlan {
   updated_at: string
 }
 
-/** Shared, dated training plans for one group — synced through Supabase so every trainer sees the same calendar. */
+/** Shared, dated training plans for one group — synced through sports-training-api so every trainer sees the same calendar. */
 export function usePlans(groupId: string) {
   const [plans, setPlans] = useState<TrainingPlan[]>([])
-  const [loading, setLoading] = useState(isSupabaseConfigured)
+  const [loading, setLoading] = useState(isApiConfigured)
   const [error, setError] = useState<string | null>(null)
 
   const refresh = useCallback(async () => {
-    if (!isSupabaseConfigured) {
+    if (!isApiConfigured) {
       setLoading(false)
       return
     }
     setLoading(true)
-    const { data, error } = await supabase
-      .from('plans')
-      .select('*')
-      .eq('group_id', groupId)
-      .order('training_date', { ascending: true })
-    setLoading(false)
-    if (error) {
-      setError(error.message)
-      return
+    try {
+      const data = await api.get<TrainingPlan[]>(`/plans?groupId=${encodeURIComponent(groupId)}`)
+      setError(null)
+      setPlans(data)
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to load plans')
+    } finally {
+      setLoading(false)
     }
-    setError(null)
-    setPlans(data ?? [])
   }, [groupId])
 
   useEffect(() => {
@@ -55,15 +52,14 @@ export function usePlans(groupId: string) {
     emoji: string,
     exerciseIds: string[],
   ) {
-    const { error } = await supabase.rpc('create_plan', {
+    await api.post('/plans', {
       passcode,
-      p_group_id: groupId,
-      p_training_date: trainingDate,
-      p_title: title,
-      p_emoji: emoji,
-      p_exercise_ids: exerciseIds,
+      groupId,
+      trainingDate,
+      title,
+      emoji,
+      exerciseIds,
     })
-    if (error) throw new Error(error.message)
     await refresh()
   }
 
@@ -75,21 +71,18 @@ export function usePlans(groupId: string) {
     emoji: string,
     exerciseIds: string[],
   ) {
-    const { error } = await supabase.rpc('update_plan', {
+    await api.put(`/plans/${id}`, {
       passcode,
-      p_id: id,
-      p_training_date: trainingDate,
-      p_title: title,
-      p_emoji: emoji,
-      p_exercise_ids: exerciseIds,
+      trainingDate,
+      title,
+      emoji,
+      exerciseIds,
     })
-    if (error) throw new Error(error.message)
     await refresh()
   }
 
   async function deletePlan(passcode: string, id: string) {
-    const { error } = await supabase.rpc('delete_plan', { passcode, p_id: id })
-    if (error) throw new Error(error.message)
+    await api.delete(`/plans/${id}`, { passcode })
     await refresh()
   }
 
