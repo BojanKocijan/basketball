@@ -3,7 +3,6 @@ import type { useActivePlan } from '../hooks/useActivePlan'
 import { useRatings } from '../hooks/useRatings'
 import { useSessionClock } from '../hooks/useSessionClock'
 import { formatClock } from '../utils/format'
-import { ExerciseCard } from './ExerciseCard'
 import { ExerciseTimeline } from './ExerciseTimeline'
 
 export function SessionScreen({
@@ -18,7 +17,8 @@ export function SessionScreen({
   const { rate, stats } = useRatings()
   const totalSeconds = totalMinutes * 60
 
-  // cumulative start/end (in seconds) for each exercise, derived from the active plan's order
+  // cumulative start/end (in seconds) for each exercise, derived from the active plan's order —
+  // this is the vertical timeline, top to bottom, current/next exercise always first in view
   const timeline = useMemo(() => {
     return planExercises.reduce<{ exercise: (typeof planExercises)[number]; startSec: number; endSec: number }[]>(
       (acc, exercise) => {
@@ -36,7 +36,6 @@ export function SessionScreen({
   }, [timeline, elapsedSeconds])
 
   const currentEntry = timeline[currentIndex]
-  const nextEntry = timeline[currentIndex + 1]
   const isSessionDone = elapsedSeconds >= totalSeconds
 
   const overallPct = totalSeconds > 0 ? Math.min(100, (elapsedSeconds / totalSeconds) * 100) : 0
@@ -48,14 +47,14 @@ export function SessionScreen({
 
   if (!currentEntry) {
     return (
-      <div className="mx-auto max-w-md space-y-4 px-4 pb-24 pt-[calc(env(safe-area-inset-top)+1rem)]">
+      <div className="mx-auto max-w-md space-y-4 px-4 pb-24 pt-4">
         <p className="text-center text-sm text-neutral-500">No exercises in this training yet.</p>
         <button
           type="button"
           onClick={onBuildPlan}
           className="w-full rounded-2xl bg-orange-500 py-3 text-sm font-bold text-white"
         >
-          Build a training
+          Plan a training
         </button>
       </div>
     )
@@ -63,22 +62,17 @@ export function SessionScreen({
 
   const { exercise: current } = currentEntry
   const remainingInSegment = Math.max(0, currentEntry.endSec - elapsedSeconds)
+  const currentStats = stats(current.id)
   const segmentDuration = currentEntry.endSec - currentEntry.startSec
   const segmentElapsed = Math.min(
     segmentDuration,
     Math.max(0, elapsedSeconds - currentEntry.startSec),
   )
   const segmentPct = segmentDuration > 0 ? (segmentElapsed / segmentDuration) * 100 : 0
-  const currentStats = stats(current.id)
-
-  function timeRangeLabel(startSec: number, endSec: number) {
-    const fmt = (s: number) => `${Math.floor(s / 60)}:00`
-    return `${fmt(startSec)} – ${fmt(endSec)}`
-  }
 
   return (
     <div className="mx-auto max-w-md pb-24">
-      <header className="sticky top-0 z-10 border-b border-black/10 bg-white/90 px-4 pb-3 pt-[calc(env(safe-area-inset-top)+0.75rem)] backdrop-blur dark:border-white/10 dark:bg-neutral-950/90">
+      <header className="sticky top-0 z-10 border-b border-black/10 bg-white/90 px-4 pb-3 pt-3 backdrop-blur dark:border-white/10 dark:bg-neutral-950/90">
         <div className="flex items-center justify-between gap-2">
           <button
             type="button"
@@ -99,18 +93,9 @@ export function SessionScreen({
         </div>
       </header>
 
-      <ExerciseTimeline
-        exercises={planExercises}
-        currentId={current.id}
-        onSelect={(e) => {
-          const idx = timeline.findIndex((t) => t.exercise.id === e.id)
-          if (idx !== -1) goToIndex(idx)
-        }}
-      />
-
-      <main className="space-y-4 px-4 pt-2">
+      <main className="space-y-4 pt-2">
         {isSessionDone ? (
-          <div className="rounded-3xl border border-black/10 bg-white p-6 text-center dark:border-white/10 dark:bg-neutral-900">
+          <div className="mx-4 rounded-3xl border border-black/10 bg-white p-6 text-center dark:border-white/10 dark:bg-neutral-900">
             <p className="text-4xl">🏆</p>
             <h2 className="mt-2 text-lg font-bold text-neutral-900 dark:text-neutral-50">
               Session complete!
@@ -120,33 +105,19 @@ export function SessionScreen({
             </p>
           </div>
         ) : (
-          <>
-            <div className="h-1.5 w-full overflow-hidden rounded-full bg-neutral-200 dark:bg-neutral-800">
-              <div
-                className="h-full rounded-full bg-neutral-900 transition-all dark:bg-neutral-100"
-                style={{ width: `${segmentPct}%` }}
-              />
-            </div>
-            <ExerciseCard
-              exercise={current}
-              remainingLabel={formatClock(remainingInSegment)}
-              timeRangeLabel={timeRangeLabel(currentEntry.startSec, currentEntry.endSec)}
-              onRate={(value) => rate(current.id, value)}
-              ratingAverage={currentStats.average}
-              ratingCount={currentStats.count}
-            />
-            {nextEntry && (
-              <div className="rounded-2xl border border-dashed border-black/15 px-4 py-3 text-sm text-neutral-500 dark:border-white/15 dark:text-neutral-400">
-                Up next:{' '}
-                <span className="font-semibold">
-                  {nextEntry.exercise.emoji} {nextEntry.exercise.title}
-                </span>
-              </div>
-            )}
-          </>
+          <ExerciseTimeline
+            timeline={timeline}
+            currentIndex={currentIndex}
+            remainingLabel={formatClock(remainingInSegment)}
+            segmentPct={segmentPct}
+            onSelect={goToIndex}
+            onRate={(value) => rate(current.id, value)}
+            ratingAverage={currentStats.average}
+            ratingCount={currentStats.count}
+          />
         )}
 
-        <div className="grid grid-cols-4 gap-2 pt-1">
+        <div className="grid grid-cols-4 gap-2 px-4 pt-1">
           <button
             type="button"
             onClick={() => goToIndex(currentIndex - 1)}
@@ -174,7 +145,7 @@ export function SessionScreen({
         <button
           type="button"
           onClick={reset}
-          className="w-full rounded-2xl py-2 text-xs font-semibold text-neutral-400 active:text-neutral-600 dark:text-neutral-500"
+          className="w-full px-4 py-2 text-xs font-semibold text-neutral-400 active:text-neutral-600 dark:text-neutral-500"
         >
           Reset session clock
         </button>
