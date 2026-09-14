@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from 'react'
 import { isSupabaseConfigured, supabase } from '../lib/supabaseClient'
+import { toLocalIso } from '../utils/format'
 
 export interface TrainingPlan {
   id: string
@@ -10,10 +11,6 @@ export interface TrainingPlan {
   exercise_ids: string[]
   created_at: string
   updated_at: string
-}
-
-function todayIso() {
-  return new Date().toISOString().slice(0, 10)
 }
 
 /** Shared, dated training plans for one group — synced through Supabase so every trainer sees the same calendar. */
@@ -46,7 +43,7 @@ export function usePlans(groupId: string) {
     refresh()
   }, [refresh])
 
-  const today = todayIso()
+  const today = toLocalIso(new Date())
   const upcoming = plans.filter((p) => p.training_date >= today)
   const past = plans.filter((p) => p.training_date < today)
   const nextPlan = upcoming[0] ?? null
