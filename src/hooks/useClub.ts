@@ -3,6 +3,7 @@ import { isSupabaseConfigured, supabase } from '../lib/supabaseClient'
 
 export interface Club {
   name: string
+  /** Path under `public/`, relative to the app's base URL (no leading slash) — see ClubHeader. */
   logoUrl: string | null
 }
 
@@ -11,7 +12,7 @@ export interface Club {
  * `clubs` table. Once the app serves multiple clubs, this becomes "resolve the active club by
  * slug/subdomain" instead — the DB shape already supports that.
  */
-const FALLBACK_CLUB: Club = { name: 'Dunckers Hilversum', logoUrl: '/club-logo.svg' }
+const FALLBACK_CLUB: Club = { name: 'Dunckers Hilversum', logoUrl: 'logos/deDunkers.png' }
 
 export function useClub() {
   const [club, setClub] = useState<Club>(FALLBACK_CLUB)

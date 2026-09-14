@@ -9,7 +9,7 @@ export function ClubHeader() {
     <div className="flex items-center gap-2 border-b border-black/10 bg-white px-4 py-2 pt-[calc(env(safe-area-inset-top)+0.5rem)] dark:border-white/10 dark:bg-neutral-950">
       {club.logoUrl && !logoFailed ? (
         <img
-          src={club.logoUrl}
+          src={`${import.meta.env.BASE_URL}${club.logoUrl}`}
           alt={`${club.name} logo`}
           className="h-6 w-6 rounded-full object-contain"
           onError={() => setLogoFailed(true)}
