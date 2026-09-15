@@ -6,6 +6,7 @@ import type { useTrainerAccess } from '../hooks/useTrainerAccess'
 import { isApiConfigured } from '../lib/apiClient'
 import { formatDate } from '../utils/format'
 import { PlanTrainingWizard } from './PlanTrainingWizard'
+import { PlayersSection } from './PlayersSection'
 
 export function GroupsScreen({ trainerAccess }: { trainerAccess: ReturnType<typeof useTrainerAccess> }) {
   const { groupId, setGroupId } = useActiveGroup()
@@ -116,6 +117,8 @@ export function GroupsScreen({ trainerAccess }: { trainerAccess: ReturnType<type
       </div>
 
       {error && <p className="text-sm text-red-600">Could not load plans: {error}</p>}
+
+      <PlayersSection groupId={groupId} passcode={passcode} />
 
       <section>
         <h2 className="mb-2 text-xs font-semibold uppercase tracking-wide text-neutral-400">
