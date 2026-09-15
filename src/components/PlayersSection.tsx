@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { JERSEY_COLORS, usePlayers, type JerseyColor, type Player } from '../hooks/usePlayers'
+import { JerseyGraphic } from './JerseyGraphic'
 
 // Tailwind can't see dynamically-built class names, so the swatch classes are spelled out here
 // rather than interpolated from JERSEY_COLORS.
@@ -179,35 +180,31 @@ export function PlayersSection({ groupId, passcode }: { groupId: string; passcod
       ) : players.length === 0 && !adding ? (
         <p className="text-sm text-neutral-400">No players yet.</p>
       ) : (
-        <div className="space-y-2">
+        <div className="grid grid-cols-2 gap-3">
           {players.map((p) =>
             editingId === p.id ? (
-              <PlayerForm
-                key={p.id}
-                initial={{
-                  nickname: p.nickname,
-                  jerseyNumber: p.jersey_number?.toString() ?? '',
-                  jerseyColor: p.jersey_color,
-                }}
-                saving={saving}
-                saveError={saveError}
-                onCancel={closeForm}
-                onSave={handleSave}
-              />
+              <div key={p.id} className="col-span-2">
+                <PlayerForm
+                  initial={{
+                    nickname: p.nickname,
+                    jerseyNumber: p.jersey_number?.toString() ?? '',
+                    jerseyColor: p.jersey_color,
+                  }}
+                  saving={saving}
+                  saveError={saveError}
+                  onCancel={closeForm}
+                  onSave={handleSave}
+                />
+              </div>
             ) : (
               <div
                 key={p.id}
-                className="flex items-center justify-between rounded-2xl border border-black/10 bg-white p-3 dark:border-white/10 dark:bg-neutral-900"
+                className="flex flex-col items-center gap-2 rounded-2xl border border-black/10 bg-white p-3 dark:border-white/10 dark:bg-neutral-900"
               >
-                <div className="flex items-center gap-2.5">
-                  {p.jersey_color && <JerseySwatch color={p.jersey_color} />}
-                  <p className="text-sm font-bold text-neutral-900 dark:text-neutral-50">
-                    {p.nickname}
-                    {p.jersey_number !== null && (
-                      <span className="ml-1.5 font-normal text-neutral-400">#{p.jersey_number}</span>
-                    )}
-                  </p>
-                </div>
+                <JerseyGraphic color={p.jersey_color} number={p.jersey_number} nickname={p.nickname} />
+                <p className="max-w-full truncate text-xs font-semibold text-neutral-500 dark:text-neutral-400">
+                  {p.nickname}
+                </p>
                 <div className="flex shrink-0 gap-3">
                   <button
                     type="button"
