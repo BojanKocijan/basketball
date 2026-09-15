@@ -4,43 +4,47 @@ import { api } from '../lib/apiClient'
 const unlockedKey = (groupId: string) => `u8-trainer-unlocked-${groupId}`
 const passcodeKey = (groupId: string) => `u8-trainer-passcode-${groupId}`
 
+function readStoredUnlocked(groupId: string): boolean {
+  try {
+    return localStorage.getItem(unlockedKey(groupId)) === '1'
+  } catch {
+    return false
+  }
+}
+
+function readStoredPasscode(groupId: string): string {
+  try {
+    return localStorage.getItem(passcodeKey(groupId)) ?? ''
+  } catch {
+    return ''
+  }
+}
+
 /**
  * Gates the write actions (planning/editing/deleting trainings) behind a group's trainer
  * passcode. Each group has its own passcode (a code valid for one group does not unlock
- * another), so unlock state is scoped and stored per groupId — switching groups re-locks
- * unless that group was separately unlocked and remembered on this device. The passcode is
- * checked server-side by sports-training-api (via its verify_passcode RPC) — it never lives
- * anywhere the browser can read it directly.
+ * another), so unlock state is scoped per groupId. `unlocked` and `passcode` are derived
+ * straight from `(groupId, sessionOverrides)` on every render — never from state that only
+ * catches up to a new groupId via an effect — so switching the active group can never render
+ * a stale frame where the *previous* group's unlock (or its passcode) briefly still applies.
+ * `sessionOverrides` covers two cases plain localStorage reads can't: an unlock the user chose
+ * not to remember (session-only, never written to storage) and an explicit `lock()`.
  */
 export function useTrainerAccess(groupId: string) {
-  const [unlocked, setUnlocked] = useState(() => {
-    try {
-      return localStorage.getItem(unlockedKey(groupId)) === '1'
-    } catch {
-      return false
-    }
-  })
-  const [passcodeValue, setPasscodeValue] = useState(() => {
-    try {
-      return localStorage.getItem(passcodeKey(groupId)) ?? ''
-    } catch {
-      return ''
-    }
-  })
+  const [sessionOverrides, setSessionOverrides] = useState<
+    Record<string, { unlocked: boolean; passcode: string }>
+  >({})
   const [checking, setChecking] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
-  // Re-derive from this group's own stored state whenever the active group changes.
+  // Clear a stale error (e.g. "wrong code") left over from a different group's attempt.
   useEffect(() => {
-    try {
-      setUnlocked(localStorage.getItem(unlockedKey(groupId)) === '1')
-      setPasscodeValue(localStorage.getItem(passcodeKey(groupId)) ?? '')
-    } catch {
-      setUnlocked(false)
-      setPasscodeValue('')
-    }
     setError(null)
   }, [groupId])
+
+  const override = sessionOverrides[groupId]
+  const unlocked = override ? override.unlocked : readStoredUnlocked(groupId)
+  const passcodeValue = override ? override.passcode : readStoredPasscode(groupId)
 
   const tryUnlock = useCallback(
     async (code: string, remember: boolean) => {
@@ -75,8 +79,7 @@ export function useTrainerAccess(groupId: string) {
       } catch {
         // storage unavailable; ignore
       }
-      setPasscodeValue(code)
-      setUnlocked(true)
+      setSessionOverrides((prev) => ({ ...prev, [groupId]: { unlocked: true, passcode: code } }))
       return true
     },
     [groupId],
@@ -89,8 +92,7 @@ export function useTrainerAccess(groupId: string) {
     } catch {
       // storage unavailable; ignore
     }
-    setPasscodeValue('')
-    setUnlocked(false)
+    setSessionOverrides((prev) => ({ ...prev, [groupId]: { unlocked: false, passcode: '' } }))
   }, [groupId])
 
   const passcode = useCallback(() => passcodeValue, [passcodeValue])

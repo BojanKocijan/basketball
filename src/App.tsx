@@ -50,7 +50,9 @@ function App() {
       ) : (
         <>
           {tab === 'setup' && <SetupScreen />}
-          {tab === 'groups' && <GroupsScreen trainerAccess={trainerAccess} />}
+          {tab === 'groups' && (
+            <GroupsScreen groupId={groupId} setGroupId={setGroupId} trainerAccess={trainerAccess} />
+          )}
           {tab === 'library' && <ExercisesScreen />}
           {tab === 'session' && (
             <SessionScreen
