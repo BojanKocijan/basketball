@@ -1,7 +1,18 @@
 @import 'tailwindcss';
 
+/* Switches every `dark:` utility from following prefers-color-scheme automatically to needing
+ * a `.dark` ancestor class instead — see useTheme.ts, which is what actually decides whether
+ * that class is present (from an explicit Light/Dark choice, or from the OS query while the
+ * preference is System). Existing `dark:` usage across the app is unaffected either way: the
+ * class name and what it styles stay the same, only what triggers it changes. */
+@custom-variant dark (&:where(.dark, .dark *));
+
 :root {
-  color-scheme: light dark;
+  color-scheme: light;
+}
+
+:root.dark {
+  color-scheme: dark;
 }
 
 html,
