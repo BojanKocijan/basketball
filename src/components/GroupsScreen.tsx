@@ -1,6 +1,6 @@
 import { useState } from 'react'
-import { GROUPS } from '../data/groups'
 import { useActiveGroup } from '../hooks/useActiveGroup'
+import { useGroups } from '../hooks/useGroups'
 import { usePlans, type TrainingPlan } from '../hooks/usePlans'
 import type { useTrainerAccess } from '../hooks/useTrainerAccess'
 import { isApiConfigured } from '../lib/apiClient'
@@ -8,7 +8,11 @@ import { formatDate } from '../utils/format'
 import { PlanTrainingWizard } from './PlanTrainingWizard'
 
 export function GroupsScreen({ trainerAccess }: { trainerAccess: ReturnType<typeof useTrainerAccess> }) {
-  const { groupId, setGroupId, group } = useActiveGroup()
+  const { groupId, setGroupId } = useActiveGroup()
+  const { groups } = useGroups()
+  const group = groups.find((g) => g.id === groupId) ?? { name: groupId, emoji: '🏀' }
+  // Available groups only — a coming_soon one has no training content to plan against yet.
+  const availableGroups = groups.filter((g) => g.status === 'available')
   // Always unlocked here — the app-level gate in App.tsx (see LockScreen) never renders this
   // screen otherwise.
   const { lock, passcode } = trainerAccess
@@ -45,9 +49,9 @@ export function GroupsScreen({ trainerAccess }: { trainerAccess: ReturnType<type
     setSaveError(null)
     try {
       if (editingPlan) {
-        await updatePlan(passcode(), editingPlan.id, date, `${group.label} training`, group.emoji, exerciseIds)
+        await updatePlan(passcode(), editingPlan.id, date, `${group.name} training`, group.emoji, exerciseIds)
       } else {
-        await createPlan(passcode(), date, `${group.label} training`, group.emoji, exerciseIds)
+        await createPlan(passcode(), date, `${group.name} training`, group.emoji, exerciseIds)
       }
       closeForm()
     } catch (e) {
@@ -86,7 +90,7 @@ export function GroupsScreen({ trainerAccess }: { trainerAccess: ReturnType<type
       )}
 
       <div className="flex flex-wrap gap-2">
-        {GROUPS.map((g) => (
+        {availableGroups.map((g) => (
           <button
             key={g.id}
             type="button"
@@ -97,7 +101,7 @@ export function GroupsScreen({ trainerAccess }: { trainerAccess: ReturnType<type
                 : 'border-black/10 bg-white text-neutral-600 dark:border-white/10 dark:bg-neutral-900 dark:text-neutral-300'
             }`}
           >
-            {g.emoji} {g.label}
+            {g.emoji} {g.name}
           </button>
         ))}
       </div>
@@ -208,7 +212,7 @@ export function GroupsScreen({ trainerAccess }: { trainerAccess: ReturnType<type
           mode={editingPlan ? 'edit' : 'create'}
           initialDate={editingPlan?.training_date ?? ''}
           initialExerciseIds={editingPlan?.exercise_ids ?? []}
-          groupLabel={group.label}
+          groupLabel={group.name}
           takenDates={plans.filter((p) => p.id !== editingPlan?.id).map((p) => p.training_date)}
           saving={saving}
           saveError={saveError}
