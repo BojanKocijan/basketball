@@ -1,20 +1,15 @@
-import { useGroups } from '../hooks/useGroups'
 import type { useTrainerAccess } from '../hooks/useTrainerAccess'
 import { GroupProgressSummary } from './GroupProgressSummary'
-import { GroupSwitcher } from './GroupSwitcher'
 import { PlayersSection } from './PlayersSection'
 import { TrainerAccessBar } from './TrainerAccessBar'
 
 export function PlayersScreen({
   groupId,
-  setGroupId,
   trainerAccess,
 }: {
   groupId: string
-  setGroupId: (id: string) => void
   trainerAccess: ReturnType<typeof useTrainerAccess>
 }) {
-  const { groups } = useGroups()
   // Always unlocked here — the app-level gate in App.tsx (see LockScreen) never renders this
   // screen otherwise.
   const { lock, passcode } = trainerAccess
@@ -27,8 +22,6 @@ export function PlayersScreen({
           The kids in this group — nickname only, no real names — and how their training's going.
         </p>
       </header>
-
-      <GroupSwitcher groups={groups} groupId={groupId} setGroupId={setGroupId} />
 
       <TrainerAccessBar onLock={lock} />
 

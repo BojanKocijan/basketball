@@ -4,17 +4,14 @@ import { usePlans, type TrainingPlan } from '../hooks/usePlans'
 import type { useTrainerAccess } from '../hooks/useTrainerAccess'
 import { isApiConfigured } from '../lib/apiClient'
 import { formatDate } from '../utils/format'
-import { GroupSwitcher } from './GroupSwitcher'
 import { PlanTrainingWizard } from './PlanTrainingWizard'
 import { TrainerAccessBar } from './TrainerAccessBar'
 
 export function GroupsScreen({
   groupId,
-  setGroupId,
   trainerAccess,
 }: {
   groupId: string
-  setGroupId: (id: string) => void
   trainerAccess: ReturnType<typeof useTrainerAccess>
 }) {
   const { groups } = useGroups()
@@ -82,9 +79,9 @@ export function GroupsScreen({
   return (
     <div className="mx-auto max-w-md space-y-4 px-4 pb-28 pt-4 md:max-w-2xl lg:max-w-3xl">
       <header>
-        <h1 className="text-xl font-bold text-neutral-900 dark:text-neutral-50">Groups</h1>
+        <h1 className="text-xl font-bold text-neutral-900 dark:text-neutral-50">Training planner</h1>
         <p className="text-sm text-neutral-500 dark:text-neutral-400">
-          Pick a group, then plan next week's training together with the other trainers.
+          Plan next week's training for {group.name} together with the other trainers.
         </p>
       </header>
 
@@ -94,8 +91,6 @@ export function GroupsScreen({
           <code>.env.example</code>) to connect a sports-training-api deployment.
         </div>
       )}
-
-      <GroupSwitcher groups={groups} groupId={groupId} setGroupId={setGroupId} />
 
       <TrainerAccessBar onLock={lock} />
 

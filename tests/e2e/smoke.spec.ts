@@ -47,8 +47,8 @@ test('unlocks a group and can switch tabs via the bottom nav', async ({ page }) 
   await page.getByRole('button', { name: /library/i }).click()
   await expect(page.getByRole('button', { name: /library/i })).toBeVisible()
 
-  await page.getByRole('button', { name: /groups/i }).click()
-  await expect(page.getByRole('button', { name: /groups/i })).toBeVisible()
+  await page.getByRole('button', { name: /planner/i }).click()
+  await expect(page.getByRole('button', { name: /planner/i })).toBeVisible()
 
   // Desktop (>=1024px, see playwright.config.ts's 'desktop' project) gets a left side rail
   // instead of the phone/tablet bottom tab bar (see SideNav vs BottomNav) -- confirm whichever
