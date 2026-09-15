@@ -1,11 +1,9 @@
 import { useState } from 'react'
 import { useClub } from '../hooks/useClub'
-import { useActiveGroup } from '../hooks/useActiveGroup'
-import { sportInfo } from '../data/sports'
+import { DEFAULT_SPORT_ID, sportInfo } from '../data/sports'
 
 export function ClubHeader() {
   const club = useClub()
-  const { group } = useActiveGroup()
   const [logoFailed, setLogoFailed] = useState(false)
 
   return (
@@ -18,7 +16,7 @@ export function ClubHeader() {
           onError={() => setLogoFailed(true)}
         />
       ) : (
-        <span className="text-base leading-none">{sportInfo(group.sportId).emoji}</span>
+        <span className="text-base leading-none">{sportInfo(DEFAULT_SPORT_ID).emoji}</span>
       )}
       <span className="text-xs font-bold uppercase tracking-wide text-neutral-500 dark:text-neutral-400">
         {club.name}

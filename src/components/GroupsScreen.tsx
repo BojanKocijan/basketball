@@ -1,6 +1,6 @@
 import { useState } from 'react'
-import { GROUPS } from '../data/groups'
 import { useActiveGroup } from '../hooks/useActiveGroup'
+import { useGroups } from '../hooks/useGroups'
 import { usePlans, type TrainingPlan } from '../hooks/usePlans'
 import type { useTrainerAccess } from '../hooks/useTrainerAccess'
 import { isApiConfigured } from '../lib/apiClient'
@@ -8,13 +8,16 @@ import { formatDate } from '../utils/format'
 import { PlanTrainingWizard } from './PlanTrainingWizard'
 
 export function GroupsScreen({ trainerAccess }: { trainerAccess: ReturnType<typeof useTrainerAccess> }) {
-  const { groupId, setGroupId, group } = useActiveGroup()
-  const { unlocked, checking, error: authError, tryUnlock, lock, passcode } = trainerAccess
+  const { groupId, setGroupId } = useActiveGroup()
+  const { groups } = useGroups()
+  const group = groups.find((g) => g.id === groupId) ?? { name: groupId, emoji: '🏀' }
+  // Available groups only — a coming_soon one has no training content to plan against yet.
+  const availableGroups = groups.filter((g) => g.status === 'available')
+  // Always unlocked here — the app-level gate in App.tsx (see LockScreen) never renders this
+  // screen otherwise.
+  const { lock, passcode } = trainerAccess
   const { plans, upcoming, past, loading, error, createPlan, updatePlan, deletePlan } = usePlans(groupId)
 
-  const [codeInput, setCodeInput] = useState('')
-  const [rememberCode, setRememberCode] = useState(true)
-  const [codeModalSkipped, setCodeModalSkipped] = useState(false)
   const [planning, setPlanning] = useState(false)
   const [editingPlan, setEditingPlan] = useState<TrainingPlan | null>(null)
   const [saving, setSaving] = useState(false)
@@ -46,9 +49,9 @@ export function GroupsScreen({ trainerAccess }: { trainerAccess: ReturnType<type
     setSaveError(null)
     try {
       if (editingPlan) {
-        await updatePlan(passcode(), editingPlan.id, date, `${group.label} training`, group.emoji, exerciseIds)
+        await updatePlan(passcode(), editingPlan.id, date, `${group.name} training`, group.emoji, exerciseIds)
       } else {
-        await createPlan(passcode(), date, `${group.label} training`, group.emoji, exerciseIds)
+        await createPlan(passcode(), date, `${group.name} training`, group.emoji, exerciseIds)
       }
       closeForm()
     } catch (e) {
@@ -70,16 +73,6 @@ export function GroupsScreen({ trainerAccess }: { trainerAccess: ReturnType<type
     }
   }
 
-  async function handleUnlock() {
-    const ok = await tryUnlock(codeInput, rememberCode)
-    if (ok) {
-      setCodeInput('')
-      setCodeModalSkipped(false)
-    }
-  }
-
-  const showCodeModal = !unlocked && !codeModalSkipped
-
   return (
     <div className="mx-auto max-w-md space-y-4 px-4 pb-28 pt-4">
       <header>
@@ -97,7 +90,7 @@ export function GroupsScreen({ trainerAccess }: { trainerAccess: ReturnType<type
       )}
 
       <div className="flex flex-wrap gap-2">
-        {GROUPS.map((g) => (
+        {availableGroups.map((g) => (
           <button
             key={g.id}
             type="button"
@@ -108,34 +101,19 @@ export function GroupsScreen({ trainerAccess }: { trainerAccess: ReturnType<type
                 : 'border-black/10 bg-white text-neutral-600 dark:border-white/10 dark:bg-neutral-900 dark:text-neutral-300'
             }`}
           >
-            {g.emoji} {g.label}
+            {g.emoji} {g.name}
           </button>
         ))}
       </div>
 
-      {!unlocked ? (
-        <div className="flex items-center justify-between rounded-2xl border border-black/10 bg-white px-4 py-2.5 dark:border-white/10 dark:bg-neutral-900">
-          <span className="text-sm font-semibold text-neutral-500 dark:text-neutral-400">
-            🔒 Viewing only
-          </span>
-          <button
-            type="button"
-            onClick={() => setCodeModalSkipped(false)}
-            className="text-xs font-bold text-orange-600"
-          >
-            Enter trainer code
-          </button>
-        </div>
-      ) : (
-        <div className="flex items-center justify-between rounded-2xl border border-black/10 bg-white px-4 py-2.5 dark:border-white/10 dark:bg-neutral-900">
-          <span className="text-sm font-semibold text-green-700 dark:text-green-400">
-            ✓ Trainer access unlocked
-          </span>
-          <button type="button" onClick={lock} className="text-xs font-semibold text-neutral-400">
-            Lock
-          </button>
-        </div>
-      )}
+      <div className="flex items-center justify-between rounded-2xl border border-black/10 bg-white px-4 py-2.5 dark:border-white/10 dark:bg-neutral-900">
+        <span className="text-sm font-semibold text-green-700 dark:text-green-400">
+          ✓ Trainer access unlocked
+        </span>
+        <button type="button" onClick={lock} className="text-xs font-semibold text-neutral-400">
+          Lock
+        </button>
+      </div>
 
       {error && <p className="text-sm text-red-600">Could not load plans: {error}</p>}
 
@@ -155,25 +133,23 @@ export function GroupsScreen({ trainerAccess }: { trainerAccess: ReturnType<type
             <p className="text-sm text-neutral-600 dark:text-neutral-300">
               {nextTraining.exercise_ids.length} exercises · plan this with the other trainer
             </p>
-            {unlocked && (
-              <div className="mt-3 flex gap-3">
-                <button
-                  type="button"
-                  onClick={() => startEditing(nextTraining)}
-                  className="text-xs font-bold text-orange-700 dark:text-orange-300"
-                >
-                  Edit
-                </button>
-                <button
-                  type="button"
-                  disabled={removingId === nextTraining.id}
-                  onClick={() => removePlan(nextTraining.id)}
-                  className="text-xs font-semibold text-red-500 disabled:opacity-50"
-                >
-                  {removingId === nextTraining.id ? '…' : 'Remove'}
-                </button>
-              </div>
-            )}
+            <div className="mt-3 flex gap-3">
+              <button
+                type="button"
+                onClick={() => startEditing(nextTraining)}
+                className="text-xs font-bold text-orange-700 dark:text-orange-300"
+              >
+                Edit
+              </button>
+              <button
+                type="button"
+                disabled={removingId === nextTraining.id}
+                onClick={() => removePlan(nextTraining.id)}
+                className="text-xs font-semibold text-red-500 disabled:opacity-50"
+              >
+                {removingId === nextTraining.id ? '…' : 'Remove'}
+              </button>
+            </div>
           </div>
         )}
       </section>
@@ -183,7 +159,7 @@ export function GroupsScreen({ trainerAccess }: { trainerAccess: ReturnType<type
           <h2 className="text-xs font-semibold uppercase tracking-wide text-neutral-400">
             Also upcoming
           </h2>
-          {unlocked && !formOpen && (
+          {!formOpen && (
             <button type="button" onClick={startPlanning} className="text-xs font-bold text-orange-600">
               + Plan a training
             </button>
@@ -207,25 +183,23 @@ export function GroupsScreen({ trainerAccess }: { trainerAccess: ReturnType<type
                     {p.exercise_ids.length} exercises
                   </p>
                 </div>
-                {unlocked && (
-                  <div className="flex shrink-0 gap-3">
-                    <button
-                      type="button"
-                      onClick={() => startEditing(p)}
-                      className="text-xs font-bold text-orange-600"
-                    >
-                      Edit
-                    </button>
-                    <button
-                      type="button"
-                      disabled={removingId === p.id}
-                      onClick={() => removePlan(p.id)}
-                      className="text-xs font-semibold text-red-500 disabled:opacity-50"
-                    >
-                      {removingId === p.id ? '…' : 'Remove'}
-                    </button>
-                  </div>
-                )}
+                <div className="flex shrink-0 gap-3">
+                  <button
+                    type="button"
+                    onClick={() => startEditing(p)}
+                    className="text-xs font-bold text-orange-600"
+                  >
+                    Edit
+                  </button>
+                  <button
+                    type="button"
+                    disabled={removingId === p.id}
+                    onClick={() => removePlan(p.id)}
+                    className="text-xs font-semibold text-red-500 disabled:opacity-50"
+                  >
+                    {removingId === p.id ? '…' : 'Remove'}
+                  </button>
+                </div>
               </div>
             ))}
           </div>
@@ -238,7 +212,7 @@ export function GroupsScreen({ trainerAccess }: { trainerAccess: ReturnType<type
           mode={editingPlan ? 'edit' : 'create'}
           initialDate={editingPlan?.training_date ?? ''}
           initialExerciseIds={editingPlan?.exercise_ids ?? []}
-          groupLabel={group.label}
+          groupLabel={group.name}
           takenDates={plans.filter((p) => p.id !== editingPlan?.id).map((p) => p.training_date)}
           saving={saving}
           saveError={saveError}
@@ -271,52 +245,6 @@ export function GroupsScreen({ trainerAccess }: { trainerAccess: ReturnType<type
         </section>
       )}
 
-      {showCodeModal && (
-        <div className="fixed inset-0 z-20 flex items-end justify-center bg-black/40 px-4 pb-20 sm:items-center sm:pb-4">
-          <div className="w-full max-w-md rounded-3xl bg-white p-5 shadow-lg dark:bg-neutral-900">
-            <p className="text-lg font-bold text-neutral-900 dark:text-neutral-50">Trainer code</p>
-            <p className="mt-1 text-sm text-neutral-500 dark:text-neutral-400">
-              Enter the shared trainer code to plan or remove trainings. You can browse the
-              upcoming trainings without it.
-            </p>
-            <input
-              type="password"
-              value={codeInput}
-              onChange={(e) => setCodeInput(e.target.value)}
-              placeholder="Code"
-              autoFocus
-              className="mt-3 w-full rounded-xl border border-black/10 px-3 py-2 text-sm dark:border-white/10 dark:bg-neutral-800"
-            />
-            <label className="mt-2 flex items-center gap-2 text-xs text-neutral-500 dark:text-neutral-400">
-              <input
-                type="checkbox"
-                checked={rememberCode}
-                onChange={(e) => setRememberCode(e.target.checked)}
-              />
-              Remember this code on this device
-            </label>
-            {authError && <p className="mt-1.5 text-xs font-semibold text-red-600">{authError}</p>}
-
-            <div className="mt-4 flex gap-2">
-              <button
-                type="button"
-                onClick={() => setCodeModalSkipped(true)}
-                className="flex-1 rounded-xl border border-black/10 py-2.5 text-sm font-semibold text-neutral-600 dark:border-white/10 dark:text-neutral-300"
-              >
-                Skip for now
-              </button>
-              <button
-                type="button"
-                disabled={checking || !codeInput}
-                onClick={handleUnlock}
-                className="flex-1 rounded-xl bg-orange-500 py-2.5 text-sm font-bold text-white disabled:opacity-50"
-              >
-                {checking ? '…' : 'Unlock'}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   )
 }

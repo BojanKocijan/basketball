@@ -12,8 +12,8 @@ export interface Club {
  * `clubs` table via sports-training-api. Once the app serves multiple clubs, this becomes
  * "resolve the active club by slug/subdomain" instead — the DB shape already supports that.
  *
- * No sport here — a club can run several sport sections (see src/data/groups.ts), so sport is
- * a property of the active group, not the club.
+ * No sport here — a club can run several sport sections (see the `groups`/`group_templates`
+ * tables via useGroups), so sport is a property of the active group, not the club.
  */
 const FALLBACK_CLUB: Club = { name: 'Dunckers Hilversum', logoUrl: 'logos/deDunkers.png' }
 
