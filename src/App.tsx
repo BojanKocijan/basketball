@@ -3,6 +3,7 @@ import { BottomNav, type Tab } from './components/BottomNav'
 import { ClubHeader } from './components/ClubHeader'
 import { ExercisesScreen } from './components/ExercisesScreen'
 import { GroupsScreen } from './components/GroupsScreen'
+import { LockScreen } from './components/LockScreen'
 import { SessionScreen } from './components/SessionScreen'
 import { SetupScreen } from './components/SetupScreen'
 import { VocabularyScreen } from './components/VocabularyScreen'
@@ -17,7 +18,7 @@ import { formatDate } from './utils/format'
 function App() {
   const [tab, setTab] = useState<Tab>('groups')
   const activePlan = useActivePlan()
-  const { groupId } = useActiveGroup()
+  const { groupId, setGroupId } = useActiveGroup()
   const { nextPlan } = usePlans(groupId)
   // Shared across tabs so a trainer code entered on Groups also unlocks session controls.
   // Scoped to the active group — each group has its own passcode.
@@ -42,19 +43,25 @@ function App() {
   return (
     <div className="min-h-screen bg-neutral-50 dark:bg-neutral-950">
       <ClubHeader />
-      {tab === 'setup' && <SetupScreen />}
-      {tab === 'groups' && <GroupsScreen trainerAccess={trainerAccess} />}
-      {tab === 'library' && <ExercisesScreen />}
-      {tab === 'session' && (
-        <SessionScreen
-          activePlan={sessionPlan}
-          groupId={groupId}
-          trainerAccess={trainerAccess}
-          onBuildPlan={() => setTab('groups')}
-        />
+      {!trainerAccess.unlocked ? (
+        <LockScreen groupId={groupId} onSelectGroup={setGroupId} trainerAccess={trainerAccess} />
+      ) : (
+        <>
+          {tab === 'setup' && <SetupScreen />}
+          {tab === 'groups' && <GroupsScreen trainerAccess={trainerAccess} />}
+          {tab === 'library' && <ExercisesScreen />}
+          {tab === 'session' && (
+            <SessionScreen
+              activePlan={sessionPlan}
+              groupId={groupId}
+              trainerAccess={trainerAccess}
+              onBuildPlan={() => setTab('groups')}
+            />
+          )}
+          {tab === 'vocabulary' && <VocabularyScreen />}
+          <BottomNav active={tab} onChange={setTab} />
+        </>
       )}
-      {tab === 'vocabulary' && <VocabularyScreen />}
-      <BottomNav active={tab} onChange={setTab} />
     </div>
   )
 }
