@@ -51,7 +51,7 @@ export function PlayerProgressSection({
         Rate the players
       </h2>
       {error && <p className="mb-2 text-sm text-red-600">Could not load players: {error}</p>}
-      <div className="space-y-2">
+      <div className="grid grid-cols-1 gap-2 md:grid-cols-2">
         {players.map((p) => (
           <div
             key={p.id}

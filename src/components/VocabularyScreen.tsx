@@ -13,7 +13,7 @@ export function VocabularyScreen() {
   }, [query])
 
   return (
-    <div className="mx-auto max-w-md space-y-4 px-4 pb-24 pt-4">
+    <div className="mx-auto max-w-md space-y-4 px-4 pb-24 pt-4 md:max-w-2xl lg:max-w-3xl">
       <header>
         <h1 className="text-xl font-bold text-neutral-900 dark:text-neutral-50">
           Core bilingual vocabulary
@@ -29,7 +29,7 @@ export function VocabularyScreen() {
         className="w-full rounded-2xl border border-black/10 bg-white px-4 py-3 text-sm outline-none focus:border-orange-400 dark:border-white/10 dark:bg-neutral-900 dark:text-neutral-100"
       />
 
-      <ul className="space-y-2">
+      <ul className="grid grid-cols-1 gap-2 md:grid-cols-2 lg:grid-cols-3">
         {filtered.map((v) => (
           <li
             key={v.nl}
@@ -40,7 +40,7 @@ export function VocabularyScreen() {
           </li>
         ))}
         {filtered.length === 0 && (
-          <li className="py-8 text-center text-sm text-neutral-400">No matches.</li>
+          <li className="col-span-full py-8 text-center text-sm text-neutral-400">No matches.</li>
         )}
       </ul>
     </div>

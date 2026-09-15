@@ -30,7 +30,7 @@ export function LockScreen({
   }
 
   return (
-    <div className="mx-auto flex min-h-[calc(100vh-56px)] max-w-md flex-col items-center justify-center gap-6 px-4 py-8">
+    <div className="mx-auto flex min-h-[calc(100vh-56px)] max-w-md flex-col items-center justify-center gap-6 px-4 py-8 md:max-w-lg">
       {groupsLoading ? (
         <p className="text-sm text-neutral-400">Loading groups…</p>
       ) : groupsError ? (

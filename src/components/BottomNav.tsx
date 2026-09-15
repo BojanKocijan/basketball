@@ -1,14 +1,11 @@
-export type Tab = 'setup' | 'groups' | 'players' | 'library' | 'session' | 'vocabulary'
+import { TABS, type Tab } from '../data/tabs'
 
-const TABS: { id: Tab; label: string; emoji: string }[] = [
-  { id: 'setup', label: 'Setup', emoji: '📋' },
-  { id: 'groups', label: 'Groups', emoji: '👥' },
-  { id: 'players', label: 'Players', emoji: '🧒' },
-  { id: 'library', label: 'Library', emoji: '🏀' },
-  { id: 'session', label: 'Session', emoji: '⏱️' },
-  { id: 'vocabulary', label: 'Words', emoji: '💬' },
-]
+export type { Tab } from '../data/tabs'
 
+/** Phone/tablet navigation — a thumb-reachable bottom bar. Hidden at desktop width (see
+ * SideNav), where a fixed bottom-of-screen tab strip spanning a wide viewport stops making
+ * ergonomic sense — it's not thumb-reachable on a laptop, and a left rail is the established
+ * desktop pattern for primary navigation. */
 export function BottomNav({
   active,
   onChange,
@@ -19,9 +16,9 @@ export function BottomNav({
   return (
     <nav
       className="fixed inset-x-0 bottom-0 z-20 border-t border-black/10 bg-white/95 backdrop-blur
-                 pb-[env(safe-area-inset-bottom)] dark:border-white/10 dark:bg-neutral-900/95"
+                 pb-[env(safe-area-inset-bottom)] dark:border-white/10 dark:bg-neutral-900/95 lg:hidden"
     >
-      <div className="mx-auto flex max-w-md">
+      <div className="mx-auto flex max-w-md md:max-w-3xl">
         {TABS.map((tab) => {
           const isActive = tab.id === active
           return (

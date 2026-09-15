@@ -6,12 +6,12 @@ export function SetupScreen() {
   const doneCount = checked.filter(Boolean).length
 
   return (
-    <div className="mx-auto max-w-md space-y-4 px-4 pb-24 pt-4">
+    <div className="mx-auto max-w-md space-y-4 px-4 pb-24 pt-4 md:max-w-2xl">
       <header>
         <h1 className="text-xl font-bold text-neutral-900 dark:text-neutral-50">
           Before the children arrive
         </h1>
-        <p className="text-sm text-neutral-500 dark:text-neutral-400">
+        <p className="text-sm text-neutral-500 dark:text-neutral-400 md:max-w-lg">
           Group: 8–10 children · Main goals: have fun, learn names, dribble, pass, shoot, finish
           as a team.
         </p>
@@ -26,7 +26,7 @@ export function SetupScreen() {
             {doneCount}/{setupChecklist.length}
           </span>
         </div>
-        <div className="space-y-2">
+        <div className="grid grid-cols-1 gap-2 md:grid-cols-2">
           {setupChecklist.map((item, i) => (
             <label
               key={item}
@@ -57,7 +57,10 @@ export function SetupScreen() {
         )}
       </section>
 
-      <section>
+      {/* Long-form reading content stays at a readable width rather than stretching to the
+          wider container — a paragraph spanning a whole desktop screen is harder to read, not
+          easier. */}
+      <section className="md:max-w-lg">
         <h2 className="mb-2 text-xs font-semibold uppercase tracking-wide text-neutral-400">
           Coach roles
         </h2>
@@ -78,7 +81,7 @@ export function SetupScreen() {
         </p>
       </section>
 
-      <section>
+      <section className="md:max-w-lg">
         <h2 className="mb-2 text-xs font-semibold uppercase tracking-wide text-neutral-400">
           Coaching principles
         </h2>
@@ -95,7 +98,7 @@ export function SetupScreen() {
         </div>
       </section>
 
-      <section>
+      <section className="md:max-w-lg">
         <h2 className="mb-2 text-xs font-semibold uppercase tracking-wide text-neutral-400">
           Privacy
         </h2>

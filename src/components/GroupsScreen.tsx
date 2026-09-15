@@ -80,7 +80,7 @@ export function GroupsScreen({
   }
 
   return (
-    <div className="mx-auto max-w-md space-y-4 px-4 pb-28 pt-4">
+    <div className="mx-auto max-w-md space-y-4 px-4 pb-28 pt-4 md:max-w-2xl lg:max-w-3xl">
       <header>
         <h1 className="text-xl font-bold text-neutral-900 dark:text-neutral-50">Groups</h1>
         <p className="text-sm text-neutral-500 dark:text-neutral-400">
@@ -153,7 +153,7 @@ export function GroupsScreen({
         {!loading && restUpcoming.length === 0 ? (
           <p className="text-sm text-neutral-400">No other trainings scheduled.</p>
         ) : (
-          <div className="space-y-2">
+          <div className="grid grid-cols-1 gap-2 md:grid-cols-2">
             {restUpcoming.map((p) => (
               <div
                 key={p.id}
@@ -208,7 +208,7 @@ export function GroupsScreen({
       {past.length > 0 && (
         <section>
           <h2 className="mb-2 text-xs font-semibold uppercase tracking-wide text-neutral-400">Past</h2>
-          <div className="space-y-2 opacity-60">
+          <div className="grid grid-cols-1 gap-2 opacity-60 md:grid-cols-2">
             {past
               .slice()
               .reverse()
