@@ -4,6 +4,7 @@ import { ClubHeader } from './components/ClubHeader'
 import { ExercisesScreen } from './components/ExercisesScreen'
 import { GroupsScreen } from './components/GroupsScreen'
 import { LockScreen } from './components/LockScreen'
+import { PlayersScreen } from './components/PlayersScreen'
 import { SessionScreen } from './components/SessionScreen'
 import { SetupScreen } from './components/SetupScreen'
 import { VocabularyScreen } from './components/VocabularyScreen'
@@ -53,10 +54,14 @@ function App() {
           {tab === 'groups' && (
             <GroupsScreen groupId={groupId} setGroupId={setGroupId} trainerAccess={trainerAccess} />
           )}
+          {tab === 'players' && (
+            <PlayersScreen groupId={groupId} setGroupId={setGroupId} trainerAccess={trainerAccess} />
+          )}
           {tab === 'library' && <ExercisesScreen />}
           {tab === 'session' && (
             <SessionScreen
               activePlan={sessionPlan}
+              planId={nextPlan?.id ?? null}
               groupId={groupId}
               trainerAccess={trainerAccess}
               onBuildPlan={() => setTab('groups')}

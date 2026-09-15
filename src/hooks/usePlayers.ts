@@ -92,3 +92,16 @@ export function usePlayers(groupId: string) {
 
   return { players, loading, error, refresh, createPlayer, updatePlayer, deletePlayer }
 }
+
+/** Logs one player's rating (1-3, same scale as the exercise-level "Kids liked it?" widget)
+ * for a category in a specific training. One row per (player, plan, category) server-side —
+ * re-rating the same training+category just overwrites it. */
+export async function ratePlayerProgress(
+  passcode: string,
+  playerId: string,
+  planId: string,
+  categoryId: string,
+  rating: number,
+) {
+  await api.post(`/players/${playerId}/progress`, { passcode, planId, categoryId, rating })
+}

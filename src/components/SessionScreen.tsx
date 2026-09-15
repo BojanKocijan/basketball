@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef } from 'react'
+import type { CategoryId } from '../data/categories'
 import type { useActivePlan } from '../hooks/useActivePlan'
 import { useFullscreen } from '../hooks/useFullscreen'
 import { useRatings } from '../hooks/useRatings'
@@ -7,14 +8,20 @@ import type { useTrainerAccess } from '../hooks/useTrainerAccess'
 import { notify, requestNotificationPermission } from '../lib/notify'
 import { formatClock } from '../utils/format'
 import { ExerciseTimeline } from './ExerciseTimeline'
+import { PlayerProgressSection } from './PlayerProgressSection'
 
 export function SessionScreen({
   activePlan,
+  planId,
   groupId,
   trainerAccess,
   onBuildPlan,
 }: {
   activePlan: ReturnType<typeof useActivePlan>
+  /** The real, saved plan's id (see usePlans) — null when this session is just the default
+   * fallback session, not a training actually planned for this group. Player progress ratings
+   * are tied to a plan_id server-side, so rating only makes sense once one exists. */
+  planId: string | null
   groupId: string
   trainerAccess: ReturnType<typeof useTrainerAccess>
   onBuildPlan: () => void
@@ -28,6 +35,19 @@ export function SessionScreen({
   const { rate, stats } = useRatings()
   const { enter: enterFullscreen, exit: exitFullscreen } = useFullscreen()
   const totalSeconds = totalMinutes * 60
+
+  // Categories this training actually touched — matches skill_categories' taxonomy (same ids
+  // minus 'warmup', see supabase/schema.sql), so player ratings only ask about skills relevant
+  // to the training just run instead of all six every time.
+  const sessionCategories = useMemo(() => {
+    const seen = new Set<CategoryId>()
+    for (const exercise of planExercises) {
+      for (const category of exercise.categories) {
+        if (category !== 'warmup') seen.add(category)
+      }
+    }
+    return [...seen]
+  }, [planExercises])
 
   // cumulative start/end (in seconds) for each exercise, derived from the active plan's order —
   // this is the vertical timeline, top to bottom, current/next exercise always first in view
@@ -146,7 +166,18 @@ export function SessionScreen({
               Great job, coaches. Time for high-fives and go home.
             </p>
           </div>
-        ) : (
+        ) : null}
+
+        {isSessionDone && unlocked && planId && (
+          <PlayerProgressSection
+            groupId={groupId}
+            planId={planId}
+            categories={sessionCategories}
+            passcode={trainerAccess.passcode}
+          />
+        )}
+
+        {!isSessionDone && (
           <ExerciseTimeline
             timeline={timeline}
             currentIndex={currentIndex}
