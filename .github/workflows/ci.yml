@@ -20,11 +20,9 @@ jobs:
       - run: npm run test:run
       - run: npm run build
         env:
-          # Not actually secret: both get compiled straight into the public JS bundle either
-          # way. The anon key only grants what Row Level Security allows (see supabase/schema.sql);
-          # the real secret (the trainer passcode) is never exposed to the client at all.
-          VITE_SUPABASE_URL: ${{ vars.VITE_SUPABASE_URL }}
-          VITE_SUPABASE_ANON_KEY: ${{ vars.VITE_SUPABASE_ANON_KEY }}
+          # Any value works for a plain build (nothing here hits the network) — the real
+          # sports-training-api URL is set per Netlify deploy context instead (see README).
+          VITE_API_URL: https://api.build-only.invalid
 
   e2e:
     runs-on: ubuntu-latest
@@ -39,8 +37,9 @@ jobs:
       - run: npx playwright install --with-deps chromium
       - run: npm run build
         env:
-          VITE_SUPABASE_URL: ${{ vars.VITE_SUPABASE_URL }}
-          VITE_SUPABASE_ANON_KEY: ${{ vars.VITE_SUPABASE_ANON_KEY }}
+          # The e2e test mocks every request to this origin (see tests/e2e/smoke.spec.ts) --
+          # it's never actually resolved over the network, just used as a stable match target.
+          VITE_API_URL: https://api.e2e-mock.invalid
       - run: npm run test:e2e
         env:
           CI: true
