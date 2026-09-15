@@ -2,10 +2,11 @@
  * rather than a static file, so parents and coaches can read it from inside the app itself.
  *
  * Content reflects exactly what this app's schema actually stores today (see
- * sports-training-api's supabase/schema.sql) — no invented data categories. The two
- * `[placeholder]` fields are the only parts a real club must fill in themselves; Claude has
- * no authority to declare an organization's legal contact details on its behalf. Treat this
- * as a solid first draft, not a substitute for the club committee's own legal sign-off.
+ * sports-training-api's supabase/schema.sql) — no invented data categories. The remaining
+ * `[placeholder]` is the one part a real club must fill in itself (its own contact address);
+ * Claude has no authority to declare an organization's legal contact details on its behalf.
+ * Treat this as a solid first draft, not a substitute for the club committee's own legal
+ * sign-off — especially section 0, which needs updating the day this stops being a test app.
  */
 export interface PolicySection {
   heading: string
@@ -16,9 +17,15 @@ export interface PolicySection {
 export function buildPrivacySections(clubName: string): PolicySection[] {
   return [
     {
+      heading: '0. Current status: test app',
+      paragraphs: [
+        'This deployment is currently a test/development app used to build and try out features — it is not yet handling a real club\'s players. No real children\'s data is being collected or processed while it is in this phase. This section must be removed, and the rest of this notice reviewed, before the app is used with a live club.',
+      ],
+    },
+    {
       heading: '1. Who is responsible for this data',
       paragraphs: [
-        `${clubName} ("the club") is the data controller for the information described in this notice. This app is a tool the club's trainers use to plan trainings and track training progress — it is not a public service and is not used to collect data for any purpose beyond running the club's youth basketball program.`,
+        `Once live, ${clubName} ("the club") would be the data controller for the information described in this notice. This app is a tool for a club's trainers to plan trainings and track training progress — it is not a public service and is not used to collect data for any purpose beyond running a club's youth basketball program.`,
         'Questions or requests about your data can be sent to: [the club\'s privacy contact — e.g. board@your-club.example].',
       ],
     },
@@ -50,7 +57,7 @@ export function buildPrivacySections(clubName: string): PolicySection[] {
     {
       heading: '6. Where data is stored',
       paragraphs: [
-        'Data is stored in a Supabase (PostgreSQL) database and the app itself is hosted on Netlify. [The club should confirm and state the hosting region here, e.g. "the EU", once known.]',
+        'Data is stored in a Supabase (PostgreSQL) database hosted in Frankfurt, Germany (EU) and the app itself is hosted on Netlify.',
       ],
     },
     {
