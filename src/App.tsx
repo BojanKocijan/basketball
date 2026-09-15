@@ -7,6 +7,7 @@ import { LockScreen } from './components/LockScreen'
 import { PlayersScreen } from './components/PlayersScreen'
 import { SessionScreen } from './components/SessionScreen'
 import { SetupScreen } from './components/SetupScreen'
+import { SideNav } from './components/SideNav'
 import { VocabularyScreen } from './components/VocabularyScreen'
 import { findExercise } from './data/exercises'
 import { useActiveGroup } from './hooks/useActiveGroup'
@@ -49,27 +50,30 @@ function App() {
       {!trainerAccess.unlocked ? (
         <LockScreen groupId={groupId} onSelectGroup={setGroupId} trainerAccess={trainerAccess} />
       ) : (
-        <>
-          {tab === 'setup' && <SetupScreen />}
-          {tab === 'groups' && (
-            <GroupsScreen groupId={groupId} setGroupId={setGroupId} trainerAccess={trainerAccess} />
-          )}
-          {tab === 'players' && (
-            <PlayersScreen groupId={groupId} setGroupId={setGroupId} trainerAccess={trainerAccess} />
-          )}
-          {tab === 'library' && <ExercisesScreen />}
-          {tab === 'session' && (
-            <SessionScreen
-              activePlan={sessionPlan}
-              planId={nextPlan?.id ?? null}
-              groupId={groupId}
-              trainerAccess={trainerAccess}
-              onBuildPlan={() => setTab('groups')}
-            />
-          )}
-          {tab === 'vocabulary' && <VocabularyScreen />}
-          <BottomNav active={tab} onChange={setTab} />
-        </>
+        <div className="lg:flex">
+          <SideNav active={tab} onChange={setTab} />
+          <div className="min-w-0 flex-1">
+            {tab === 'setup' && <SetupScreen />}
+            {tab === 'groups' && (
+              <GroupsScreen groupId={groupId} setGroupId={setGroupId} trainerAccess={trainerAccess} />
+            )}
+            {tab === 'players' && (
+              <PlayersScreen groupId={groupId} setGroupId={setGroupId} trainerAccess={trainerAccess} />
+            )}
+            {tab === 'library' && <ExercisesScreen />}
+            {tab === 'session' && (
+              <SessionScreen
+                activePlan={sessionPlan}
+                planId={nextPlan?.id ?? null}
+                groupId={groupId}
+                trainerAccess={trainerAccess}
+                onBuildPlan={() => setTab('groups')}
+              />
+            )}
+            {tab === 'vocabulary' && <VocabularyScreen />}
+            <BottomNav active={tab} onChange={setTab} />
+          </div>
+        </div>
       )}
     </div>
   )

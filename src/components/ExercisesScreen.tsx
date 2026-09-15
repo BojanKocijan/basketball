@@ -27,7 +27,7 @@ export function ExercisesScreen() {
   }, [query, activeCategories, trainable])
 
   return (
-    <div className="mx-auto max-w-md space-y-4 px-4 pb-24 pt-4">
+    <div className="mx-auto max-w-md space-y-4 px-4 pb-24 pt-4 md:max-w-3xl lg:max-w-5xl">
       <header>
         <h1 className="text-xl font-bold text-neutral-900 dark:text-neutral-50">Exercise library</h1>
         <p className="text-sm text-neutral-500 dark:text-neutral-400">
@@ -54,7 +54,7 @@ export function ExercisesScreen() {
         ))}
       </div>
 
-      <div className="space-y-2">
+      <div className="grid grid-cols-1 gap-2 md:grid-cols-2 lg:grid-cols-3">
         {filtered.map((exercise) => {
           const s = stats(exercise.id)
           return (
@@ -68,7 +68,7 @@ export function ExercisesScreen() {
           )
         })}
         {filtered.length === 0 && (
-          <p className="py-8 text-center text-sm text-neutral-400">No matches.</p>
+          <p className="col-span-full py-8 text-center text-sm text-neutral-400">No matches.</p>
         )}
       </div>
     </div>

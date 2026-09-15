@@ -88,7 +88,7 @@ export function PlanTrainingWizard({
         </p>
       </header>
 
-      <main className="mx-auto w-full max-w-md flex-1 space-y-4 overflow-y-auto px-4 py-4">
+      <main className="mx-auto w-full max-w-md flex-1 space-y-4 overflow-y-auto px-4 py-4 md:max-w-2xl lg:max-w-3xl">
         {step === 1 && (
           <div>
             <label className="text-xs font-semibold uppercase tracking-wide text-neutral-400">
@@ -119,7 +119,7 @@ export function PlanTrainingWizard({
             <p className="mb-2 text-sm text-neutral-500 dark:text-neutral-400">
               Optionally narrow the exercise list to a focus for this training.
             </p>
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-2 gap-3 md:grid-cols-3">
               {CATEGORIES.map((cat) => (
                 <CategoryCard
                   key={cat.id}
@@ -137,7 +137,7 @@ export function PlanTrainingWizard({
             <p className="mb-2 text-xs text-neutral-500 dark:text-neutral-400">
               {selected.size} selected · {selectedMinutes}′
             </p>
-            <div className="space-y-2">
+            <div className="grid grid-cols-1 gap-2 md:grid-cols-2">
               {filtered.map((ex) => (
                 <SelectableExerciseCard
                   key={ex.id}
@@ -179,7 +179,7 @@ export function PlanTrainingWizard({
       </main>
 
       <footer className="shrink-0 border-t border-black/10 bg-white px-4 py-3 pb-[calc(env(safe-area-inset-bottom)+0.75rem)] dark:border-white/10 dark:bg-neutral-900">
-        <div className="mx-auto flex max-w-md gap-2">
+        <div className="mx-auto flex max-w-md gap-2 md:max-w-2xl lg:max-w-3xl">
           <button
             type="button"
             onClick={step === 1 ? onCancel : () => setStep((s) => s - 1)}

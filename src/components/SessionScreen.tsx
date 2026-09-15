@@ -103,7 +103,7 @@ export function SessionScreen({
 
   if (!currentEntry) {
     return (
-      <div className="mx-auto max-w-md space-y-4 px-4 pb-24 pt-4">
+      <div className="mx-auto max-w-md space-y-4 px-4 pb-24 pt-4 md:max-w-xl">
         <p className="text-center text-sm text-neutral-500">No exercises in this training yet.</p>
         <button
           type="button"
@@ -127,7 +127,7 @@ export function SessionScreen({
   const segmentPct = segmentDuration > 0 ? (segmentElapsed / segmentDuration) * 100 : 0
 
   return (
-    <div className="mx-auto max-w-md pb-24">
+    <div className="mx-auto max-w-md pb-24 md:max-w-2xl">
       <header className="sticky top-0 z-10 border-b border-black/10 bg-white/90 px-4 pb-3 pt-3 backdrop-blur dark:border-white/10 dark:bg-neutral-950/90">
         <div className="flex items-center justify-between gap-2">
           <button
