@@ -1,5 +1,4 @@
 import { useState } from 'react'
-import { useActiveGroup } from '../hooks/useActiveGroup'
 import { useGroups } from '../hooks/useGroups'
 import { usePlans, type TrainingPlan } from '../hooks/usePlans'
 import type { useTrainerAccess } from '../hooks/useTrainerAccess'
@@ -8,8 +7,15 @@ import { formatDate } from '../utils/format'
 import { PlanTrainingWizard } from './PlanTrainingWizard'
 import { PlayersSection } from './PlayersSection'
 
-export function GroupsScreen({ trainerAccess }: { trainerAccess: ReturnType<typeof useTrainerAccess> }) {
-  const { groupId, setGroupId } = useActiveGroup()
+export function GroupsScreen({
+  groupId,
+  setGroupId,
+  trainerAccess,
+}: {
+  groupId: string
+  setGroupId: (id: string) => void
+  trainerAccess: ReturnType<typeof useTrainerAccess>
+}) {
   const { groups } = useGroups()
   const group = groups.find((g) => g.id === groupId) ?? { name: groupId, emoji: '🏀' }
   // Available groups only — a coming_soon one has no training content to plan against yet.
