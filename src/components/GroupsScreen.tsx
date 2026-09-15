@@ -4,8 +4,9 @@ import { usePlans, type TrainingPlan } from '../hooks/usePlans'
 import type { useTrainerAccess } from '../hooks/useTrainerAccess'
 import { isApiConfigured } from '../lib/apiClient'
 import { formatDate } from '../utils/format'
+import { GroupSwitcher } from './GroupSwitcher'
 import { PlanTrainingWizard } from './PlanTrainingWizard'
-import { PlayersSection } from './PlayersSection'
+import { TrainerAccessBar } from './TrainerAccessBar'
 
 export function GroupsScreen({
   groupId,
@@ -18,8 +19,6 @@ export function GroupsScreen({
 }) {
   const { groups } = useGroups()
   const group = groups.find((g) => g.id === groupId) ?? { name: groupId, emoji: '🏀' }
-  // Available groups only — a coming_soon one has no training content to plan against yet.
-  const availableGroups = groups.filter((g) => g.status === 'available')
   // Always unlocked here — the app-level gate in App.tsx (see LockScreen) never renders this
   // screen otherwise.
   const { lock, passcode } = trainerAccess
@@ -96,35 +95,11 @@ export function GroupsScreen({
         </div>
       )}
 
-      <div className="flex flex-wrap gap-2">
-        {availableGroups.map((g) => (
-          <button
-            key={g.id}
-            type="button"
-            onClick={() => setGroupId(g.id)}
-            className={`rounded-full border px-3.5 py-2 text-sm font-semibold transition-colors ${
-              g.id === groupId
-                ? 'border-orange-500 bg-orange-50 text-orange-700 dark:bg-orange-500/10 dark:text-orange-300'
-                : 'border-black/10 bg-white text-neutral-600 dark:border-white/10 dark:bg-neutral-900 dark:text-neutral-300'
-            }`}
-          >
-            {g.emoji} {g.name}
-          </button>
-        ))}
-      </div>
+      <GroupSwitcher groups={groups} groupId={groupId} setGroupId={setGroupId} />
 
-      <div className="flex items-center justify-between rounded-2xl border border-black/10 bg-white px-4 py-2.5 dark:border-white/10 dark:bg-neutral-900">
-        <span className="text-sm font-semibold text-green-700 dark:text-green-400">
-          ✓ Trainer access unlocked
-        </span>
-        <button type="button" onClick={lock} className="text-xs font-semibold text-neutral-400">
-          Lock
-        </button>
-      </div>
+      <TrainerAccessBar onLock={lock} />
 
       {error && <p className="text-sm text-red-600">Could not load plans: {error}</p>}
-
-      <PlayersSection groupId={groupId} passcode={passcode} />
 
       <section>
         <h2 className="mb-2 text-xs font-semibold uppercase tracking-wide text-neutral-400">
