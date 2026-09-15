@@ -12,7 +12,7 @@ export function SideNav({
   return (
     <nav
       className="sticky top-0 hidden w-56 shrink-0 flex-col gap-1 self-start border-r border-black/10
-                 bg-white px-3 py-4 lg:flex dark:border-white/10 dark:bg-neutral-900"
+                 bg-white px-3 py-4 lg:flex lg:min-h-screen dark:border-white/10 dark:bg-neutral-900"
     >
       {TABS.map((tab) => {
         const isActive = tab.id === active
